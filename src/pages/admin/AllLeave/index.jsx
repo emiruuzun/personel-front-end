@@ -232,7 +232,7 @@ const AdminLeaveRequests = () => {
                   <option value="">Durum Seçin</option>
                   <option value="Onaylandı">Onaylandı</option>
                   <option value="Reddedildi">Reddedildi</option>
-                  <option value="Beklemede">Beklemede</option>
+                  {/* <option value="Beklemede">Beklemede</option> */}
                 </select>
 
                 {newStatus === "Reddedildi" && (

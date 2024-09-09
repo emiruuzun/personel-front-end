@@ -7,7 +7,7 @@ import { FaBox, FaSignOutAlt, FaBell, FaUserCircle } from "react-icons/fa";
 
 function DashboardLayout({ children }) {
   const navigate = useNavigate();
-  const { notifications } = useNotifications();
+  const { notifications, leaveNotifications } = useNotifications(); // leaveNotifications ekledik
 
   const handleLogout = async () => {
     try {
@@ -21,14 +21,6 @@ function DashboardLayout({ children }) {
     switch (name) {
       case "Profile":
         return <FaUserCircle className="mr-2" />;
-      // case "Main":
-      //   return <FaHome className="mr-2" />;
-      // case "Add Question":
-      //   return <FaPlusCircle className="mr-2" />;
-      // case "All Questions":
-      //   return <FaListUl className="mr-2" />;
-      // case "My Questions":
-      //   return <FaQuestionCircle className="mr-2" />;
       case "Feed": // 'Feed' için özel olarak bildirim sayacı içeren ikon
         return (
           <div className="relative mr-2">
@@ -36,6 +28,17 @@ function DashboardLayout({ children }) {
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
                 {notifications.length}
+              </span>
+            )}
+          </div>
+        );
+      case "All Leave": // 'LeaveRequests' için bildirim sayacı ekleyin
+        return (
+          <div className="relative mr-2">
+            <FaBell />
+            {leaveNotifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                {leaveNotifications.length}
               </span>
             )}
           </div>
