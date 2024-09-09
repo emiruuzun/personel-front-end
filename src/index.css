@@ -1,13 +1,39 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@keyframes gradient-x {
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 10s ease infinite;
+}
+
+/* Genel scrollbar stilini özelleştirme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* Yatay scrollbar özelleştirmesi */
+::-webkit-scrollbar-track {
+    background: #2D3748;
+    /* scrollbar track rengi */
+    border-radius: 10px;
+}
+
+/* Dikey scrollbar özelleştirmesi */
+::-webkit-scrollbar-thumb {
+    background: #6366F1;
+    /* scrollbar rengi */
+    border-radius: 10px;
 }
