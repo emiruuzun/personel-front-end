@@ -138,7 +138,11 @@ export const getAllLeave = async () => {
   }
 };
 
-export const updateLeaveStatus = async (leaveId, newStatus) => {
+export const updateLeaveStatus = async (
+  leaveId,
+  newStatus,
+  rejectionReason
+) => {
   try {
     const apiRequest = await fetch(
       `${API_BASE_URL}/admin/leave/status-update`,
@@ -151,6 +155,8 @@ export const updateLeaveStatus = async (leaveId, newStatus) => {
         body: JSON.stringify({
           leaveId, // İzin talebinin ID'si
           status: newStatus, // Yeni durum
+          rejectionReason:
+            newStatus === "Reddedildi" ? rejectionReason : undefined, // Reddetme nedeni, sadece durum "Reddedildi" ise gönderilecek
         }),
       }
     );

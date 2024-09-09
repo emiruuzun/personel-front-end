@@ -10,6 +10,7 @@ const AdminLeaveRequests = () => {
   const [selectedLeaveDetails, setSelectedLeaveDetails] = useState(null);
   const [selectedLeaveForStatus, setSelectedLeaveForStatus] = useState(null);
   const [newStatus, setNewStatus] = useState("");
+  const [rejectionReason, setRejectionReason] = useState(""); // Reddetme nedeni için state
   const [isUpdating, setIsUpdating] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState("Hepsi");
@@ -40,23 +41,30 @@ const AdminLeaveRequests = () => {
       return;
     }
 
+    if (newStatus === "Reddedildi" && !rejectionReason) {
+      toast.error("Lütfen reddetme nedenini girin.");
+      return;
+    }
+
     setIsUpdating(true);
 
     try {
       const response = await updateLeaveStatus(
         selectedLeaveForStatus._id,
-        newStatus
+        newStatus,
+        rejectionReason // Reddetme nedenini de gönderiyoruz
       );
       if (response.success) {
         setLeaveRequests((prevRequests) =>
           prevRequests.map((request) =>
             request._id === selectedLeaveForStatus._id
-              ? { ...request, status: newStatus }
+              ? { ...request, status: newStatus, rejectionReason }
               : request
           )
         );
         setSelectedLeaveForStatus(null);
         setNewStatus("");
+        setRejectionReason(""); // Reddetme nedenini temizle
         setIsStatusModalOpen(false);
       } else {
         toast.error(response.message || "İzin durumu güncellenemedi.");
@@ -133,7 +141,7 @@ const AdminLeaveRequests = () => {
                 <th className="py-3 px-4">Adı Soyadı</th>
                 <th className="py-3 px-4">Görevi</th>
                 <th className="py-3 px-4">İzin Türü</th>
-                <th className="py-3 px-4">Talep Oluşturulma Tarihi</th>
+                <th className="py-3 px-4">Başlangıç Tarihi</th>
                 <th className="py-3 px-4">Durum</th>
                 <th className="py-3 px-4">İşlemler</th>
               </tr>
@@ -147,7 +155,7 @@ const AdminLeaveRequests = () => {
                   <td className="py-3 px-4">{request.fullName}</td>
                   <td className="py-3 px-4">{request.position}</td>
                   <td className="py-3 px-4">{request.leaveType}</td>
-                  <td className="py-3 px-4">{formatDate(request.createdAt)}</td>
+                  <td className="py-3 px-4">{formatDate(request.startDate)}</td>
                   <td className="py-3 px-4">
                     {request.status === "Onaylandı" ? (
                       <span className="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs font-semibold">
@@ -175,6 +183,7 @@ const AdminLeaveRequests = () => {
                         setSelectedLeaveForStatus(request);
                         setIsStatusModalOpen(true);
                         setNewStatus("");
+                        setRejectionReason(""); // Reddetme nedenini sıfırla
                       }}
                       className="bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150"
                     >
@@ -205,6 +214,18 @@ const AdminLeaveRequests = () => {
                   <option value="Reddedildi">Reddedildi</option>
                   <option value="Beklemede">Beklemede</option>
                 </select>
+
+                {newStatus === "Reddedildi" && (
+                  <div>
+                    <textarea
+                      placeholder="Reddetme nedenini yazın..."
+                      className="w-full py-2 px-3 border rounded mb-4"
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                    />
+                  </div>
+                )}
+
                 <button
                   onClick={handleUpdateStatus}
                   className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600"
@@ -294,6 +315,14 @@ const AdminLeaveRequests = () => {
                     </strong>
                     <span>{selectedLeaveDetails.reason}</span>
                   </div>
+                  {selectedLeaveDetails.status === "Reddedildi" && (
+                    <div className="col-span-2 border-t pt-2">
+                      <strong className="block text-gray-700">
+                        Reddetme Nedeni:
+                      </strong>
+                      <span>{selectedLeaveDetails.rejectionReason}</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
