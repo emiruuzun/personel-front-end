@@ -183,9 +183,17 @@ const AdminLeaveRequests = () => {
                         setSelectedLeaveForStatus(request);
                         setIsStatusModalOpen(true);
                         setNewStatus("");
-                        setRejectionReason(""); // Reddetme nedenini sıfırla
                       }}
-                      className="bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150"
+                      className={`bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150 ${
+                        request.status === "Onaylandı" ||
+                        request.status === "Reddedildi"
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                      disabled={
+                        request.status === "Onaylandı" ||
+                        request.status === "Reddedildi"
+                      }
                     >
                       Durum Güncelle
                     </button>

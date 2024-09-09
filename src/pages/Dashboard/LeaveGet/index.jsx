@@ -50,6 +50,10 @@ const LeaveRequestsPage = () => {
                 <th className="py-3 px-4 border-b text-left">Bitiş Tarihi</th>
                 <th className="py-3 px-4 border-b text-left">İzin Günleri</th>
                 <th className="py-3 px-4 border-b text-left">Durum</th>
+                <th className="py-3 px-4 border-b text-left">
+                  Reddetme Nedeni
+                </th>{" "}
+                {/* Yeni sütun eklendi */}
               </tr>
             </thead>
             <tbody>
@@ -78,6 +82,12 @@ const LeaveRequestsPage = () => {
                     >
                       {leave.status || "Beklemede"}
                     </span>
+                  </td>
+                  <td className="py-2 px-4 border-b text-sm text-gray-700">
+                    {leave.status === "Reddedildi" && leave.rejectionReason
+                      ? leave.rejectionReason
+                      : "-"}{" "}
+                    {/* Reddetme nedeni */}
                   </td>
                 </tr>
               ))}
