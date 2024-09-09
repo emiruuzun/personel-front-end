@@ -42,7 +42,6 @@ export const leaveGet = async () => {
     });
 
     const data = await apiRequest.json();
-    console.log(data,"Dara");
 
     if (data.success) {
       toast.success("İzin talepleri başarıyla alındı.", { autoClose: 2000 });

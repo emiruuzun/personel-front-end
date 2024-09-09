@@ -22,8 +22,6 @@ const AdminLeaveRequests = () => {
         const response = await getAllLeave();
         if (response.success) {
           setLeaveRequests(response.data);
-        } else {
-          toast.error(response.message || "İzin talepleri getirilemedi.");
         }
       } catch (error) {
         toast.error("İzin talepleri çekilirken hata oluştu.");
@@ -99,6 +97,12 @@ const AdminLeaveRequests = () => {
         <div className="flex justify-center items-center min-h-screen">
           <p className="text-xl font-semibold text-gray-700">Yükleniyor...</p>
         </div>
+      ) : leaveRequests.length === 0 ? (
+        <div className="flex justify-center items-center min-h-screen">
+          <p className="text-xl font-semibold text-gray-700">
+            Henüz bir izin talebi yok.
+          </p>
+        </div>
       ) : (
         <div className="p-8">
           <h1 className="text-2xl font-semibold mb-6">
@@ -135,73 +139,81 @@ const AdminLeaveRequests = () => {
           </div>
 
           {/* İzin Talepleri Tablosu */}
-          <table className="min-w-full bg-white rounded-lg shadow-md">
-            <thead>
-              <tr className="text-left bg-gray-800 text-white rounded-t">
-                <th className="py-3 px-4">Adı Soyadı</th>
-                <th className="py-3 px-4">Görevi</th>
-                <th className="py-3 px-4">İzin Türü</th>
-                <th className="py-3 px-4">Başlangıç Tarihi</th>
-                <th className="py-3 px-4">Durum</th>
-                <th className="py-3 px-4">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((request) => (
-                <tr
-                  key={request._id}
-                  className="border-t border-gray-200 hover:bg-gray-100 transition duration-150"
-                >
-                  <td className="py-3 px-4">{request.fullName}</td>
-                  <td className="py-3 px-4">{request.position}</td>
-                  <td className="py-3 px-4">{request.leaveType}</td>
-                  <td className="py-3 px-4">{formatDate(request.startDate)}</td>
-                  <td className="py-3 px-4">
-                    {request.status === "Onaylandı" ? (
-                      <span className="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs font-semibold">
-                        Onaylandı
-                      </span>
-                    ) : request.status === "Reddedildi" ? (
-                      <span className="bg-red-200 text-red-700 py-1 px-3 rounded-full text-xs font-semibold">
-                        Reddedildi
-                      </span>
-                    ) : (
-                      <span className="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs font-semibold">
-                        Beklemede
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 flex space-x-2">
-                    <button
-                      onClick={() => setSelectedLeaveDetails(request)}
-                      className="bg-blue-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-blue-600 transition duration-150"
-                    >
-                      Talep Detayları
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedLeaveForStatus(request);
-                        setIsStatusModalOpen(true);
-                        setNewStatus("");
-                      }}
-                      className={`bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150 ${
-                        request.status === "Onaylandı" ||
-                        request.status === "Reddedildi"
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                      disabled={
-                        request.status === "Onaylandı" ||
-                        request.status === "Reddedildi"
-                      }
-                    >
-                      Durum Güncelle
-                    </button>
-                  </td>
+          {filteredRequests.length === 0 ? (
+            <div className="text-center text-gray-500">
+              Seçilen kritere göre izin talebi bulunamadı.
+            </div>
+          ) : (
+            <table className="min-w-full bg-white rounded-lg shadow-md">
+              <thead>
+                <tr className="text-left bg-gray-800 text-white rounded-t">
+                  <th className="py-3 px-4">Adı Soyadı</th>
+                  <th className="py-3 px-4">Görevi</th>
+                  <th className="py-3 px-4">İzin Türü</th>
+                  <th className="py-3 px-4">Başlangıç Tarihi</th>
+                  <th className="py-3 px-4">Durum</th>
+                  <th className="py-3 px-4">İşlemler</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredRequests.map((request) => (
+                  <tr
+                    key={request._id}
+                    className="border-t border-gray-200 hover:bg-gray-100 transition duration-150"
+                  >
+                    <td className="py-3 px-4">{request.fullName}</td>
+                    <td className="py-3 px-4">{request.position}</td>
+                    <td className="py-3 px-4">{request.leaveType}</td>
+                    <td className="py-3 px-4">
+                      {formatDate(request.startDate)}
+                    </td>
+                    <td className="py-3 px-4">
+                      {request.status === "Onaylandı" ? (
+                        <span className="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs font-semibold">
+                          Onaylandı
+                        </span>
+                      ) : request.status === "Reddedildi" ? (
+                        <span className="bg-red-200 text-red-700 py-1 px-3 rounded-full text-xs font-semibold">
+                          Reddedildi
+                        </span>
+                      ) : (
+                        <span className="bg-yellow-200 text-yellow-800 py-1 px-3 rounded-full text-xs font-semibold">
+                          Beklemede
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 flex space-x-2">
+                      <button
+                        onClick={() => setSelectedLeaveDetails(request)}
+                        className="bg-blue-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-blue-600 transition duration-150"
+                      >
+                        Talep Detayları
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedLeaveForStatus(request);
+                          setIsStatusModalOpen(true);
+                          setNewStatus("");
+                        }}
+                        className={`bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150 ${
+                          request.status === "Onaylandı" ||
+                          request.status === "Reddedildi"
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={
+                          request.status === "Onaylandı" ||
+                          request.status === "Reddedildi"
+                        }
+                      >
+                        Durum Güncelle
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
           {/* Durum Güncelle Modal */}
           {isStatusModalOpen && selectedLeaveForStatus && (

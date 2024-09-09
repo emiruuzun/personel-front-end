@@ -123,14 +123,12 @@ export const getAllLeave = async () => {
         Authorization: `Bearer: ${getCookie("access_token")}`,
       },
     });
-
-    if (!apiRequest.ok) {
-      const textResponse = await apiRequest.text();
-      toast.error("API error response:", textResponse);
-      throw new Error(`API request failed with status ${apiRequest.status}`);
-    }
-
     const response = await apiRequest.json();
+
+    // Yanıtın boş olup olmadığını kontrol et
+    if (!response.success || response.data.length === 0) {
+      toast.info("Henüz herhangi bir izin talebi bulunmuyor.");
+    }
     return response;
   } catch (error) {
     console.error("Talepleri çekerken hata oluştu.", error);
