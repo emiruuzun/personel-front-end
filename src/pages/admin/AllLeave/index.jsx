@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
+import { formatDate } from "../../../utils/form-date";
 import { getAllLeave, updateLeaveStatus } from "../../../services/admin";
+
 import { toast } from "react-toastify";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -74,13 +76,13 @@ const AdminLeaveRequests = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("tr-TR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  // const formatDate = (dateString) => {
+  //   return new Date(dateString).toLocaleDateString("tr-TR", {
+  //     year: "numeric",
+  //     month: "long",
+  //     day: "numeric",
+  //   });
+  // };
 
   const filteredRequests = leaveRequests.filter((leave) => {
     const matchesStatus =
@@ -150,7 +152,7 @@ const AdminLeaveRequests = () => {
                   <th className="py-3 px-4">Adı Soyadı</th>
                   <th className="py-3 px-4">Görevi</th>
                   <th className="py-3 px-4">İzin Türü</th>
-                  <th className="py-3 px-4">Başlangıç Tarihi</th>
+                  <th className="py-3 px-4">İzin Başvuru Tarihi</th>
                   <th className="py-3 px-4">Durum</th>
                   <th className="py-3 px-4">İşlemler</th>
                 </tr>
@@ -165,7 +167,7 @@ const AdminLeaveRequests = () => {
                     <td className="py-3 px-4">{request.position}</td>
                     <td className="py-3 px-4">{request.leaveType}</td>
                     <td className="py-3 px-4">
-                      {formatDate(request.startDate)}
+                      {formatDate(request.createdAt)}
                     </td>
                     <td className="py-3 px-4">
                       {request.status === "Onaylandı" ? (
