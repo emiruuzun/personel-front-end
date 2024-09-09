@@ -88,7 +88,7 @@ PublicRoute.propTypes = {
 
 function App() {
   const { setNotifications } = useNotifications();
-  const { setLikeNotifications } = useNotifications();
+  const { setLeaveNotifications } = useNotifications();
   const { user } = useUser();
 
   useEffect(() => {
@@ -122,17 +122,21 @@ function App() {
         query: { userId: userId },
       });
 
-      socket.on("likeNotification", (data) => {
+      socket.on("leaveStatusUpdated", (data) => {
         console.log("appJs Data", data);
-        setLikeNotifications((prev) => [...prev, data]);
-        toast.info(`Beğenen: ${data.likedBy} soru: ${data.questionTitle}`);
+
+        // Bildirimi backend'den gelen mesaj ile güncelleyin
+        setLeaveNotifications((prev) => [...prev, data]);
+
+        // Gelen data.message'ı kullanarak bildirim mesajını göster
+        toast.info(data.message);
       });
 
       return () => {
-        socket.off("likeNotification");
+        socket.off("leaveStatusUpdated");
       };
     }
-  }, [user, setLikeNotifications]); //
+  }, [user, setLeaveNotifications]); //
 
   return (
     <>

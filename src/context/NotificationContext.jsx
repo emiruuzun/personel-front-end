@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext } from "react";
 
 const NotificationContext = createContext();
 
@@ -6,10 +6,17 @@ export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
-  const [likeNotifications, setLikeNotifications] = useState([]);
+  const [leaveNotifications, setLeaveNotifications] = useState([]);
 
   return (
-    <NotificationContext.Provider value={{ notifications, setNotifications ,likeNotifications,setLikeNotifications}}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        setNotifications,
+        leaveNotifications,
+        setLeaveNotifications,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
