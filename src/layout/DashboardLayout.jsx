@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { menuItem } from "../utils/MenuItem";
 import { useNotifications } from "../context/NotificationContext";
 import { logoutUser } from "../services/auth";
-import { FaBox, FaSignOutAlt, FaBell, FaUserCircle } from "react-icons/fa";
+import {
+  FaBox,
+  FaSignOutAlt,
+  FaBell,
+  FaUserCircle,
+  FaBars,
+} from "react-icons/fa";
 
 function DashboardLayout({ children }) {
   const navigate = useNavigate();
-  const { notifications, leaveNotifications } = useNotifications(); // leaveNotifications ekledik
+  const { notifications, leaveNotifications } = useNotifications();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -21,7 +28,7 @@ function DashboardLayout({ children }) {
     switch (name) {
       case "Profile":
         return <FaUserCircle className="mr-2" />;
-      case "Feed": // 'Feed' için özel olarak bildirim sayacı içeren ikon
+      case "Feed":
         return (
           <div className="relative mr-2">
             <FaBell />
@@ -32,7 +39,7 @@ function DashboardLayout({ children }) {
             )}
           </div>
         );
-      case "All Leave": // 'LeaveRequests' için bildirim sayacı ekleyin
+      case "All Leave":
         return (
           <div className="relative mr-2">
             <FaBell />
@@ -49,10 +56,26 @@ function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
-      <div className="w-80 bg-gray-900 text-white shadow-lg">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-900">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gray-900 p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-extrabold text-indigo-500">Dashboard</h1>
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="text-white"
+        >
+          <FaBars size={24} />
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        className={`${
+          isSidebarOpen ? "block" : "hidden"
+        } md:block w-full md:w-80 bg-gray-900 text-white shadow-lg overflow-y-auto`}
+      >
         <div className="p-6">
-          <h1 className="text-3xl font-extrabold mb-8 border-b border-gray-700 pb-4 text-indigo-500">
+          <h1 className="hidden md:block text-3xl font-extrabold mb-8 border-b border-gray-700 pb-4 text-indigo-500">
             Dashboard
           </h1>
           <ul className="space-y-6">
@@ -72,6 +95,7 @@ function DashboardLayout({ children }) {
                             ? "bg-indigo-600 text-indigo-100 py-2 px-4 rounded-lg w-full"
                             : "text-gray-300 py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 w-full"
                         }
+                        onClick={() => setIsSidebarOpen(false)}
                       >
                         {item.name}
                       </NavLink>
@@ -90,7 +114,9 @@ function DashboardLayout({ children }) {
           </button>
         </div>
       </div>
-      <div className="flex-1 bg-gray-800 m-6 p-10 rounded-xl shadow-xl">
+
+      {/* Main Content */}
+      <div className="flex-1 bg-gray-800 p-4 md:m-6 md:p-10 rounded-xl shadow-xl overflow-y-auto">
         {children}
       </div>
     </div>

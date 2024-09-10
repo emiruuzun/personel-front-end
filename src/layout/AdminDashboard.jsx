@@ -1,34 +1,68 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { adminItem } from '../utils/AdminItem';
-import { logoutUser } from '../services/auth';
-import { FaBox, FaSignOutAlt ,FaUserCircle, FaPlusCircle, FaTrashAlt, FaUserCog } from 'react-icons/fa';
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { adminItem } from "../utils/AdminItem";
+import { logoutUser } from "../services/auth";
+import {
+  FaBox,
+  FaSignOutAlt,
+  FaUserCircle,
+  FaPlusCircle,
+  FaTrashAlt,
+  FaUserCog,
+  FaBars,
+} from "react-icons/fa";
 
-function AdminDashboardlayout({ children }) {
+function AdminDashboardLayout({ children }) {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await logoutUser(navigate); 
+      await logoutUser(navigate);
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
   const getIcon = (name) => {
-    switch(name) {
-      case 'Profile': return <FaUserCircle className="mr-2" />;
-      case 'Question Add': return <FaPlusCircle className="mr-2" />;
-      case 'Question Delete': return <FaTrashAlt className="mr-2" />;
-      case 'User Settings': return <FaUserCog className="mr-2" />;
-      default: return <FaBox className="mr-2" />;
+    switch (name) {
+      case "Profile":
+        return <FaUserCircle className="mr-2" />;
+      case "Question Add":
+        return <FaPlusCircle className="mr-2" />;
+      case "Question Delete":
+        return <FaTrashAlt className="mr-2" />;
+      case "User Settings":
+        return <FaUserCog className="mr-2" />;
+      default:
+        return <FaBox className="mr-2" />;
     }
-  }
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/6 bg-gray-900 text-white shadow-lg">
+    <div className="flex flex-col h-screen md:flex-row">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-gray-900 p-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold text-indigo-400">Admin Menü</h1>
+        <button onClick={toggleSidebar} className="text-white">
+          <FaBars size={24} />
+        </button>
+      </div>
+
+      {/* Sidebar */}
+      <div
+        className={`w-full md:w-64 bg-gray-900 text-white shadow-lg ${
+          isSidebarOpen ? "block" : "hidden"
+        } md:block`}
+      >
         <div className="p-4">
-          <h1 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2 text-indigo-400">Admin Menü</h1>
+          <h1 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2 text-indigo-400 hidden md:block">
+            Admin Menü
+          </h1>
           <ul className="space-y-4 mt-6">
             {adminItem.map((section) => (
               <li key={section.name} className="mb-4">
@@ -37,12 +71,19 @@ function AdminDashboardlayout({ children }) {
                 </div>
                 <ul className="space-y-2 mt-2">
                   {section.items.map((item) => (
-                    <li key={item.slug} className="flex items-center bg-gray-800 p-1 rounded-md hover:bg-gray-700 transition-colors duration-200">
+                    <li
+                      key={item.slug}
+                      className="flex items-center bg-gray-800 p-1 rounded-md hover:bg-gray-700 transition-colors duration-200"
+                    >
                       {getIcon(item.name)}
                       <NavLink
                         to={`/${item.slug}`}
-                        className="block text-gray-200 hover:text-gray-300 transition-colors duration-200"
-                        activeClassName="text-indigo-400"
+                        className={({ isActive }) =>
+                          `block text-gray-200 hover:text-gray-300 transition-colors duration-200 ${
+                            isActive ? "text-indigo-400" : ""
+                          }`
+                        }
+                        onClick={() => setIsSidebarOpen(false)}
                       >
                         {item.name}
                       </NavLink>
@@ -54,7 +95,7 @@ function AdminDashboardlayout({ children }) {
           </ul>
           <button
             onClick={handleLogout}
-            className="flex items-center mt-80 text-gray-200 hover:text-gray-300 transition-colors duration-200"
+            className="flex items-center mt-8 md:mt-20 text-gray-200 hover:text-gray-300 transition-colors duration-200"
           >
             <FaSignOutAlt className="mr-2" />
             Logout
@@ -62,11 +103,12 @@ function AdminDashboardlayout({ children }) {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="flex-grow bg-gray-100 rounded-lg overflow-y-auto">
-        <div className="p-8">{children}</div>
+        <div className="p-4 md:p-8">{children}</div>
       </div>
     </div>
   );
 }
 
-export default AdminDashboardlayout;
+export default AdminDashboardLayout;

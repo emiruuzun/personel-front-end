@@ -41,15 +41,46 @@ const LeaveRequestsPage = () => {
     };
   }, []);
 
+  const LeaveCard = ({ leave }) => (
+    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold">{leave.leaveType}</h3>
+        <span
+          className={`py-1 px-3 rounded-full text-xs font-semibold ${
+            leave.status === "Onaylandı"
+              ? "bg-green-200 text-green-700"
+              : leave.status === "Reddedildi"
+              ? "bg-red-200 text-red-700"
+              : "bg-yellow-200 text-yellow-800"
+          }`}
+        >
+          {leave.status || "Beklemede"}
+        </span>
+      </div>
+      <p className="text-sm text-gray-600">
+        Başlangıç: {new Date(leave.startDate).toLocaleDateString()}
+      </p>
+      <p className="text-sm text-gray-600">
+        Bitiş: {new Date(leave.endDate).toLocaleDateString()}
+      </p>
+      <p className="text-sm text-gray-600">İzin Günleri: {leave.leaveDays}</p>
+      {leave.status === "Reddedildi" && leave.rejectionReason && (
+        <p className="text-sm text-red-600 mt-2">
+          Reddetme Nedeni: {leave.rejectionReason}
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <DashboardLayout>
-      {loading ? ( // Loading kontrolünü DashboardLayout içinde tutarak kullanıcıya daha iyi bir geri bildirim sağlarız
+      {loading ? (
         <div className="flex justify-center items-center min-h-screen">
           <p className="text-2xl font-semibold text-gray-700">Yükleniyor...</p>
         </div>
       ) : (
-        <div className="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-          <h2 className="text-3xl font-extrabold border-b-2 border-gray-200 pb-4 text-indigo-500 text-center mb-6">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 bg-gray-100 rounded-lg">
+          <h2 className="text-2xl sm:text-3xl font-extrabold border-b-2 border-gray-200 pb-4 text-indigo-500 text-center mb-6">
             İzin Taleplerim
           </h2>
           {leaveRequests.length === 0 ? (
@@ -57,59 +88,80 @@ const LeaveRequestsPage = () => {
               Henüz bir izin talebiniz yok.
             </div>
           ) : (
-            <table className="min-w-full bg-white border border-gray-300 rounded-lg">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="py-3 px-4 border-b text-left">İzin Türü</th>
-                  <th className="py-3 px-4 border-b text-left">
-                    Başlangıç Tarihi
-                  </th>
-                  <th className="py-3 px-4 border-b text-left">Bitiş Tarihi</th>
-                  <th className="py-3 px-4 border-b text-left">İzin Günleri</th>
-                  <th className="py-3 px-4 border-b text-left">Durum</th>
-                  <th className="py-3 px-4 border-b text-left">
-                    Reddetme Nedeni
-                  </th>{" "}
-                  {/* Yeni sütun eklendi */}
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile view */}
+              <div className="md:hidden">
                 {leaveRequests.map((leave) => (
-                  <tr
-                    key={leave._id}
-                    className="hover:bg-gray-50 transition duration-150"
-                  >
-                    <td className="py-2 px-4 border-b">{leave.leaveType}</td>
-                    <td className="py-2 px-4 border-b">
-                      {new Date(leave.startDate).toLocaleDateString()}
-                    </td>
-                    <td className="py-2 px-4 border-b">
-                      {new Date(leave.endDate).toLocaleDateString()}
-                    </td>
-                    <td className="py-2 px-4 border-b">{leave.leaveDays}</td>
-                    <td className="py-2 px-4 border-b">
-                      <span
-                        className={`py-1 px-3 rounded-full text-xs font-semibold ${
-                          leave.status === "Onaylandı"
-                            ? "bg-green-200 text-green-700"
-                            : leave.status === "Reddedildi"
-                            ? "bg-red-200 text-red-700"
-                            : "bg-yellow-200 text-yellow-800"
-                        }`}
-                      >
-                        {leave.status || "Beklemede"}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 border-b text-sm text-gray-700">
-                      {leave.status === "Reddedildi" && leave.rejectionReason
-                        ? leave.rejectionReason
-                        : "-"}{" "}
-                      {/* Reddetme nedeni */}
-                    </td>
-                  </tr>
+                  <LeaveCard key={leave._id} leave={leave} />
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop view */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-3 px-4 border-b text-left">
+                        İzin Türü
+                      </th>
+                      <th className="py-3 px-4 border-b text-left">
+                        Başlangıç Tarihi
+                      </th>
+                      <th className="py-3 px-4 border-b text-left">
+                        Bitiş Tarihi
+                      </th>
+                      <th className="py-3 px-4 border-b text-left">
+                        İzin Günleri
+                      </th>
+                      <th className="py-3 px-4 border-b text-left">Durum</th>
+                      <th className="py-3 px-4 border-b text-left">
+                        Reddetme Nedeni
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaveRequests.map((leave) => (
+                      <tr
+                        key={leave._id}
+                        className="hover:bg-gray-50 transition duration-150"
+                      >
+                        <td className="py-2 px-4 border-b">
+                          {leave.leaveType}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {new Date(leave.startDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {new Date(leave.endDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          {leave.leaveDays}
+                        </td>
+                        <td className="py-2 px-4 border-b">
+                          <span
+                            className={`py-1 px-3 rounded-full text-xs font-semibold ${
+                              leave.status === "Onaylandı"
+                                ? "bg-green-200 text-green-700"
+                                : leave.status === "Reddedildi"
+                                ? "bg-red-200 text-red-700"
+                                : "bg-yellow-200 text-yellow-800"
+                            }`}
+                          >
+                            {leave.status || "Beklemede"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4 border-b text-sm text-gray-700">
+                          {leave.status === "Reddedildi" &&
+                          leave.rejectionReason
+                            ? leave.rejectionReason
+                            : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
