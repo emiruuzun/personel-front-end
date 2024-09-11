@@ -24,6 +24,7 @@ import AdminProfilePage from "./pages/admin/profile";
 import GetAllUsers from "./pages/admin/UserDelete";
 import AnnouncementPage from "./pages/admin/Announcement";
 import AdminLeaveRequests from "./pages/admin/AllLeave";
+import AdminLeaveUsageChart from "./pages/admin/ApexChartLeave";
 
 // Sokcet İo
 import { io } from "socket.io-client";
@@ -248,6 +249,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminLeaveRequests></AdminLeaveRequests>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/usage-chart"
+          element={
+            <AdminRoute>
+              <AdminLeaveUsageChart></AdminLeaveUsageChart>
             </AdminRoute>
           }
         />

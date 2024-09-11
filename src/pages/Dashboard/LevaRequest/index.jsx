@@ -18,7 +18,7 @@ const LeaveRequestForm = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(""); // Adı Soyadı state
   const [position, setPosition] = useState("");
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
   const [tcNo, setTcNo] = useState("");
@@ -27,6 +27,14 @@ const LeaveRequestForm = () => {
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Kullanıcı bilgisini localStorage'den al
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      setFullName(user.name); // Adı Soyadı localStorage'den al ve state'e set et
+    }
+  }, []);
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -105,9 +113,8 @@ const LeaveRequestForm = () => {
               <input
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
 

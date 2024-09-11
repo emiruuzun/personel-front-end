@@ -27,6 +27,11 @@ export const adminItem = [
         slug: "admin/Announcement",
         description: "Announcement",
       },
+      {
+        name: "Usage Chart",
+        slug: "admin/usage-chart",
+        description: "Usage Chart",
+      },
     ],
   },
 ];
