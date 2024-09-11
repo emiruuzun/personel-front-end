@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactApexChart from "react-apexcharts";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
+import { chartOptions, generateChartSeries } from "../../../utils/apexChart";
 import { getAllLeave, getAllUsers } from "../../../services/admin";
 import { FaUserCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -70,64 +71,7 @@ const AdminLeaveUsageChart = () => {
       fetchUserLeaveData(selectedUser); // Kullanıcı seçildiğinde izin verilerini getir
     }
   }, [selectedUser, fetchUserLeaveData]);
-
-  const chartOptions = {
-    chart: {
-      type: "bar",
-      height: 350,
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: "55%",
-        endingShape: "rounded",
-      },
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      show: true,
-      width: 2,
-      colors: ["transparent"],
-    },
-    xaxis: {
-      categories: ["Yıllık İzin", "Mazeret İzni", "Hastalık İzni"],
-    },
-    yaxis: {
-      title: {
-        text: "Gün",
-      },
-    },
-    fill: {
-      opacity: 1,
-    },
-    tooltip: {
-      y: {
-        formatter: function (val) {
-          return val + " gün";
-        },
-      },
-    },
-    title: {
-      text: "Yıllık İzin Kullanım Dağılımı",
-      align: "center",
-    },
-  };
-
-  const chartSeries = leaveData
-    ? [
-        {
-          name: "İzin Günleri",
-          data: [
-            leaveData["Yıllık İzin"],
-            leaveData["Mazeret İzni"],
-            leaveData["Hastalık İzni"],
-          ],
-        },
-      ]
-    : [];
-
+  const chartSeries = generateChartSeries(leaveData);
   return (
     <AdminDashboardlayout>
       <div className="p-6 bg-white rounded-lg shadow-lg">

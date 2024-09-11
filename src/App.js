@@ -94,7 +94,6 @@ function App() {
 
   useEffect(() => {
     const { REACT_APP_SOCKET_URL } = process.env;
-    console.log(process.env);
     const socket = io(REACT_APP_SOCKET_URL);
     socket.on("announcement", (announcement) => {
       setNotifications((prev) => [...prev, announcement]);
