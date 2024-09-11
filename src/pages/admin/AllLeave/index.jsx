@@ -356,14 +356,7 @@ const AdminLeaveRequests = () => {
                   label="İzin Günleri"
                   value={selectedLeaveDetails.leaveDays}
                 />
-                <DetailItem
-                  label="Yol İzni Günleri"
-                  value={selectedLeaveDetails.roadLeaveDays}
-                />
-                <DetailItem
-                  label="Adres"
-                  value={selectedLeaveDetails.address}
-                />
+
                 <DetailItem
                   label="İletişim Numarası"
                   value={selectedLeaveDetails.contactNumber}

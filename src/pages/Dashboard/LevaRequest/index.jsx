@@ -6,7 +6,6 @@ import {
   FaCalendarAlt,
   FaCommentAlt,
   FaCheckCircle,
-  FaMapMarkerAlt,
   FaPhoneAlt,
   FaUser,
   FaSpinner,
@@ -23,8 +22,6 @@ const LeaveRequestForm = () => {
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
   const [tcNo, setTcNo] = useState("");
   const [leaveDays, setLeaveDays] = useState(0);
-  const [roadLeaveDays, setRoadLeaveDays] = useState("");
-  const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,7 +54,6 @@ const LeaveRequestForm = () => {
       !leaveType ||
       !startDate ||
       !endDate ||
-      !address ||
       !contactNumber ||
       !reason
     ) {
@@ -74,8 +70,6 @@ const LeaveRequestForm = () => {
       startDate,
       endDate,
       leaveDays,
-      roadLeaveDays: parseInt(roadLeaveDays) || 0, // Yol izni boşsa 0 olarak kabul edilir
-      address,
       contactNumber,
       reason,
     };
@@ -210,32 +204,6 @@ const LeaveRequestForm = () => {
                 value={leaveDays}
                 readOnly
                 className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100"
-              />
-            </div>
-
-            {/* Yol İzin Süresi (İsteğe Bağlı) */}
-            <div className="flex flex-col">
-              <label className="mb-2 text-gray-700">
-                Yol İzin Süresi (İsteğe Bağlı):
-              </label>
-              <input
-                type="number"
-                value={roadLeaveDays}
-                onChange={(e) => handleNumericInput(e, setRoadLeaveDays)}
-                className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* İznin Geçirileceği Adres */}
-            <div className="flex flex-col">
-              <label className="mb-2 text-gray-700 flex items-center">
-                <FaMapMarkerAlt className="mr-2" /> İznin Geçirileceği Adres:
-              </label>
-              <textarea
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-                className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
