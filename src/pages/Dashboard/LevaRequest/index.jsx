@@ -9,6 +9,7 @@ import {
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaUser,
+  FaSpinner,
 } from "react-icons/fa";
 
 const LeaveRequestForm = () => {
@@ -25,6 +26,7 @@ const LeaveRequestForm = () => {
   const [roadLeaveDays, setRoadLeaveDays] = useState("");
   const [address, setAddress] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (startDate && endDate) {
@@ -54,7 +56,7 @@ const LeaveRequestForm = () => {
       alert("Lütfen tüm alanları doldurun.");
       return;
     }
-
+    setIsSubmitting(true);
     const leaveData = {
       fullName,
       position,
@@ -75,6 +77,7 @@ const LeaveRequestForm = () => {
     } catch (error) {
       console.error("İzin talebi gönderilirken hata oluştu:", error);
       alert("İzin talebi gönderilirken bir hata oluştu.");
+      setIsSubmitting(false);
     }
   };
 
@@ -88,11 +91,10 @@ const LeaveRequestForm = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto  p-4 bg-white shadow-lg rounded-lg">
-        <h2 className="text-3xl font-extrabold  border-gray-700 pb-4 text-indigo-500 text-center mb-6">
+      <div className="max-w-4xl mx-auto p-4 bg-white shadow-lg rounded-lg">
+        <h2 className="text-3xl font-extrabold border-gray-700 pb-4 text-indigo-500 text-center mb-6">
           İzin Talep Formu
         </h2>
-        {/* Kaydırma Kabı */}
         <div className="max-h-[70vh] overflow-y-auto px-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Adı Soyadı */}
@@ -144,7 +146,7 @@ const LeaveRequestForm = () => {
                 onChange={(e) => handleNumericInput(e, setTcNo)}
                 required
                 className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                maxLength={11} // TC kimlik no uzunluğu 11 hane olmalıdır
+                maxLength={11}
               />
             </div>
 
@@ -226,7 +228,7 @@ const LeaveRequestForm = () => {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 required
-                className="pl-10 p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -241,7 +243,7 @@ const LeaveRequestForm = () => {
                 onChange={(e) => handleNumericInput(e, setContactNumber)}
                 required
                 className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                maxLength={11} // İletişim numarası uzunluğu kontrolü
+                maxLength={11}
               />
             </div>
 
@@ -254,17 +256,31 @@ const LeaveRequestForm = () => {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 required
-                className="pl-10 p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300"
+              disabled={isSubmitting}
+              className={`w-full flex items-center justify-center ${
+                isSubmitting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              } text-white py-3 rounded-lg transition duration-300`}
             >
-              <FaCheckCircle className="mr-2" />
-              Talep Gönder
+              {isSubmitting ? (
+                <>
+                  <FaSpinner className="mr-2 animate-spin" />
+                  Gönderiliyor...
+                </>
+              ) : (
+                <>
+                  <FaCheckCircle className="mr-2" />
+                  Talep Gönder
+                </>
+              )}
             </button>
           </form>
         </div>
