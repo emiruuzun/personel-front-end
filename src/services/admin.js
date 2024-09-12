@@ -222,3 +222,27 @@ export const companyRegister = async (company) => {
     throw new Error("API request failed");
   }
 };
+export const getAllCompanies = async () => {
+  try {
+    const apiRequest = await fetch(`${API_BASE_URL}/admin/company-gelAll`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+    });
+
+    const data = await apiRequest.json();
+
+    if (apiRequest.ok) {
+      toast.success("Firmalar başarıyla alındı!", { autoClose: 2000 });
+    } else {
+      toast.error(data.message || "Firmalar alınamadı.");
+    }
+    return data;
+  } catch (error) {
+    console.error("API request failed:", error);
+    toast.error("Firmalar alınamadı.");
+    throw new Error("API request failed");
+  }
+};

@@ -1,18 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
+import { getAllCompanies } from "../../../services/admin";
 
 function PersonnelJobTrackingPage() {
   const [selectedDate] = useState(new Date().toLocaleDateString());
-  const [companies, setCompanies] = useState([
-    { id: 1, name: "XYZ Firması", personnel: [] },
-    { id: 2, name: "ABC Firması", personnel: [] },
-  ]);
-
+  const [companies, setCompanies] = useState([]);
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([
     { id: 1, name: "Ali Veli" },
     { id: 2, name: "Ayşe Yılmaz" },
     { id: 3, name: "Mehmet Demir" },
   ]);
+
+  useEffect(() => {
+    // API'den firmaları al
+    const fetchCompanies = async () => {
+      try {
+        const response = await getAllCompanies();
+        if (response.success) {
+          // Firmaları al ve state'e kaydet
+          const formattedCompanies = response.data.map((company) => ({
+            id: company._id,
+            name: company.name,
+            personnel: [],
+          }));
+          setCompanies(formattedCompanies);
+        }
+      } catch (error) {
+        console.error("Firmalar alınamadı.", error);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   // Handle personnel assignment to a company
   const handleAssignPersonnel = (companyId, personnelId) => {
