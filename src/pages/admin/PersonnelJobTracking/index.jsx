@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
-import { getAllCompanies } from "../../../services/admin";
+import { getAllCompanies, getAllUsers } from "../../../services/admin";
 
 function PersonnelJobTrackingPage() {
   const [selectedDate] = useState(new Date().toLocaleDateString());
   const [companies, setCompanies] = useState([]);
-  const [unassignedPersonnel, setUnassignedPersonnel] = useState([
-    { id: 1, name: "Ali Veli" },
-    { id: 2, name: "Ayşe Yılmaz" },
-    { id: 3, name: "Mehmet Demir" },
-  ]);
+  const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
 
   useEffect(() => {
     // API'den firmaları al
@@ -30,13 +26,30 @@ function PersonnelJobTrackingPage() {
       }
     };
 
+    // API'den tüm personelleri al
+    const fetchPersonnel = async () => {
+      try {
+        const response = await getAllUsers(); // Tüm personelleri çek
+        if (response.success) {
+          const personnelData = response.data.map((person) => ({
+            id: person._id,
+            name: person.name,
+          }));
+          setUnassignedPersonnel(personnelData);
+        }
+      } catch (error) {
+        console.error("Personeller alınamadı.", error);
+      }
+    };
+
     fetchCompanies();
+    fetchPersonnel();
   }, []);
 
   // Handle personnel assignment to a company
   const handleAssignPersonnel = (companyId, personnelId) => {
     const selectedPersonnel = unassignedPersonnel.find(
-      (p) => p.id === parseInt(personnelId)
+      (p) => p.id === personnelId
     );
     if (selectedPersonnel) {
       setCompanies((prevCompanies) =>
@@ -52,7 +65,7 @@ function PersonnelJobTrackingPage() {
 
       // Remove the assigned personnel from the unassigned list
       setUnassignedPersonnel((prevPersonnel) =>
-        prevPersonnel.filter((p) => p.id !== parseInt(personnelId))
+        prevPersonnel.filter((p) => p.id !== personnelId)
       );
     }
   };
