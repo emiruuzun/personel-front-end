@@ -100,7 +100,7 @@ function PersonnelJobTrackingPage() {
   return (
     <AdminDashboardlayout>
       <div className="p-6 bg-gray-100 min-h-screen">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center">
+        <h2 className="text-3xl  font-extrabold text-indigo-500  mb-6 flex items-center">
           <FaUsers className="mr-2" /> Personel İş Takibi - {selectedDate}
         </h2>
 
