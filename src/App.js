@@ -26,6 +26,7 @@ import AnnouncementPage from "./pages/admin/Announcement";
 import AdminLeaveRequests from "./pages/admin/AllLeave";
 import AdminLeaveUsageChart from "./pages/admin/ApexChartLeave";
 import CompanyRegisterPage from "./pages/admin/CompanyRegister";
+import PersonnelJobTrackingPage from "./pages/admin/PersonnelJobTracking";
 
 // Sokcet İo
 import { io } from "socket.io-client";
@@ -233,6 +234,14 @@ function App() {
           element={
             <AdminRoute>
               <CompanyRegisterPage></CompanyRegisterPage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/personel-job"
+          element={
+            <AdminRoute>
+              <PersonnelJobTrackingPage></PersonnelJobTrackingPage>
             </AdminRoute>
           }
         />

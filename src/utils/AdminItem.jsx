@@ -22,6 +22,11 @@ export const adminItem = [
         slug: "admin/company-register",
         description: "Company Regisiter",
       },
+      {
+        name: "Personnel Job Tracking",
+        slug: "admin/personel-job",
+        description: "Personnel Job Tracking",
+      },
 
       {
         name: "User Settings",
