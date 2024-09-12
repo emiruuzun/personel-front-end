@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
 import { getAllCompanies, getAllUsers } from "../../../services/admin";
-import { FaUsers, FaBuilding, FaUserPlus, FaUserMinus } from "react-icons/fa";
+import {
+  FaUsers,
+  FaBuilding,
+  FaUserPlus,
+  FaUserMinus,
+  FaEdit,
+  FaClock,
+  FaTimes,
+} from "react-icons/fa";
 
 function PersonnelJobTrackingPage() {
   const [selectedDate] = useState(new Date().toLocaleDateString());
@@ -9,6 +17,8 @@ function PersonnelJobTrackingPage() {
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingPerson, setEditingPerson] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -59,7 +69,14 @@ function PersonnelJobTrackingPage() {
           company.id === companyId
             ? {
                 ...company,
-                personnel: [...company.personnel, selectedPersonnel],
+                personnel: [
+                  ...company.personnel,
+                  {
+                    ...selectedPersonnel,
+                    workHours: { startTime: "", endTime: "" },
+                    overtimeHours: { startTime: "", endTime: "" },
+                  },
+                ],
               }
             : company
         )
@@ -89,8 +106,42 @@ function PersonnelJobTrackingPage() {
             : company
         )
       );
-      setUnassignedPersonnel((prev) => [...prev, personnelToUnassign]);
+      setUnassignedPersonnel((prev) => [
+        ...prev,
+        {
+          id: personnelToUnassign.id,
+          name: personnelToUnassign.name,
+        },
+      ]);
     }
+  };
+
+  const handleUpdatePersonnelTime = () => {
+    setCompanies((prevCompanies) =>
+      prevCompanies.map((company) =>
+        company.id === activeCompany
+          ? {
+              ...company,
+              personnel: company.personnel.map((person) =>
+                person.id === editingPerson.id
+                  ? { ...person, ...editingPerson }
+                  : person
+              ),
+            }
+          : company
+      )
+    );
+    closeEditModal();
+  };
+
+  const openEditModal = (person) => {
+    setEditingPerson(person);
+    setShowModal(true);
+  };
+
+  const closeEditModal = () => {
+    setEditingPerson(null);
+    setShowModal(false);
   };
 
   const filteredPersonnel = unassignedPersonnel.filter((person) =>
@@ -100,7 +151,7 @@ function PersonnelJobTrackingPage() {
   return (
     <AdminDashboardlayout>
       <div className="p-6 bg-gray-100 min-h-screen">
-        <h2 className="text-3xl  font-extrabold text-indigo-500  mb-6 flex items-center">
+        <h2 className="text-3xl font-extrabold text-indigo-500 mb-6 flex items-center">
           <FaUsers className="mr-2" /> Personel İş Takibi - {selectedDate}
         </h2>
 
@@ -145,27 +196,43 @@ function PersonnelJobTrackingPage() {
                     <h4 className="text-lg font-semibold mb-2 text-gray-700">
                       Atanmış Personel
                     </h4>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       {companies
                         .find((c) => c.id === activeCompany)
                         ?.personnel.map((person) => (
                           <div
                             key={person.id}
-                            className="flex items-center justify-between bg-gray-100 p-2 rounded"
+                            className="flex items-center justify-between bg-white p-3 rounded-lg shadow"
                           >
-                            <span>{person.name}</span>
-                            <button
-                              onClick={() =>
-                                handleUnassignPersonnel(
-                                  activeCompany,
-                                  person.id
-                                )
-                              }
-                              className="text-red-500 hover:text-red-700"
-                              title="Personeli Çıkar"
-                            >
-                              <FaUserMinus size={20} />
-                            </button>
+                            <span className="font-medium">{person.name}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-600">
+                                <FaClock className="inline mr-1" />
+                                {person.workHours.startTime &&
+                                person.workHours.endTime
+                                  ? `${person.workHours.startTime} - ${person.workHours.endTime}`
+                                  : "Saat belirtilmedi"}
+                              </span>
+                              <button
+                                onClick={() => openEditModal(person)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Düzenle"
+                              >
+                                <FaEdit size={18} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleUnassignPersonnel(
+                                    activeCompany,
+                                    person.id
+                                  )
+                                }
+                                className="text-red-500 hover:text-red-700"
+                                title="Personeli Çıkar"
+                              >
+                                <FaUserMinus size={18} />
+                              </button>
+                            </div>
                           </div>
                         ))}
                     </div>
@@ -209,6 +276,113 @@ function PersonnelJobTrackingPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal for editing */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">
+                {editingPerson.name} için Çalışma Saatleri
+              </h3>
+              <button
+                onClick={closeEditModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Çalışma Saatleri
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="time"
+                    value={editingPerson.workHours.startTime}
+                    onChange={(e) =>
+                      setEditingPerson({
+                        ...editingPerson,
+                        workHours: {
+                          ...editingPerson.workHours,
+                          startTime: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 p-2 border rounded"
+                  />
+                  <span className="self-center">-</span>
+                  <input
+                    type="time"
+                    value={editingPerson.workHours.endTime}
+                    onChange={(e) =>
+                      setEditingPerson({
+                        ...editingPerson,
+                        workHours: {
+                          ...editingPerson.workHours,
+                          endTime: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 p-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mesai Saatleri
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="time"
+                    value={editingPerson.overtimeHours.startTime}
+                    onChange={(e) =>
+                      setEditingPerson({
+                        ...editingPerson,
+                        overtimeHours: {
+                          ...editingPerson.overtimeHours,
+                          startTime: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 p-2 border rounded"
+                  />
+                  <span className="self-center">-</span>
+                  <input
+                    type="time"
+                    value={editingPerson.overtimeHours.endTime}
+                    onChange={(e) =>
+                      setEditingPerson({
+                        ...editingPerson,
+                        overtimeHours: {
+                          ...editingPerson.overtimeHours,
+                          endTime: e.target.value,
+                        },
+                      })
+                    }
+                    className="flex-1 p-2 border rounded"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={handleUpdatePersonnelTime}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Kaydet
+              </button>
+              <button
+                onClick={closeEditModal}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminDashboardlayout>
   );
 }
