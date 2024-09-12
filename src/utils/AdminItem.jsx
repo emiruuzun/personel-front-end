@@ -13,6 +13,17 @@ export const adminItem = [
     name: "SETTINGS",
     items: [
       {
+        name: "User Regisiter",
+        slug: "admin/personel-register",
+        description: "User Regisiter",
+      },
+      {
+        name: "Company Regisiter",
+        slug: "admin/company-register",
+        description: "Company Regisiter",
+      },
+
+      {
         name: "User Settings",
         slug: "admin/getallusers",
         description: "User Analysis",

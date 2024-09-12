@@ -2,7 +2,30 @@ import { toast } from "react-toastify";
 import { getCookie } from "../utils/cookie-manager";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL; // API base URL'sini al
+export const registerUser = async (user) => {
+  try {
+    const apiRequest = await fetch(`${API_BASE_URL}/admin/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+      body: JSON.stringify(user),
+    });
 
+    const data = await apiRequest.json();
+    if (data.success) {
+      toast.success("Registration successful", { autoClose: 2000 });
+    } else {
+      toast.error(data.message);
+    }
+    return data;
+  } catch (error) {
+    console.error("API request failed:", error);
+    toast.error("Registration failed");
+    throw new Error("API request failed");
+  }
+};
 export const getAllUsers = async () => {
   try {
     const apiRequest = await fetch(`${API_BASE_URL}/admin/alluser`, {
@@ -172,5 +195,30 @@ export const updateLeaveStatus = async (
     console.error("Durum güncellenirken hata oluştu.", error);
     toast.error("Durum güncellenirken bir hata oluştu.");
     throw error;
+  }
+};
+
+export const companyRegister = async (company) => {
+  try {
+    const apiRequest = await fetch(`${API_BASE_URL}/admin/company-register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+      body: JSON.stringify(company),
+    });
+
+    const data = await apiRequest.json();
+    if (data.success) {
+      toast.success("Şirket başarıyla kaydedildi!", { autoClose: 2000 });
+    } else {
+      toast.error(data.message);
+    }
+    return data;
+  } catch (error) {
+    console.error("API request failed:", error);
+    toast.error("Registration failed");
+    throw new Error("API request failed");
   }
 };

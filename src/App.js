@@ -10,7 +10,6 @@ import { useUser } from "./context/UserContext";
 
 // User Pages
 import Anasayfa from "./pages/Anasayfa";
-import KayıtOl from "./pages/Register/index";
 import Giris from "./pages/Login/index";
 import Dashboard from "./pages/Dashboard/index";
 import ProfilePage from "./pages/Dashboard/Profile/index";
@@ -20,11 +19,13 @@ import LeaveRequestsPage from "./pages/Dashboard/LeaveGet";
 
 // Admin Pages
 import AdminAnasayfa from "./pages/admin/anasayfa";
+import PersonelRegister from "./pages/admin/PersonelRegister";
 import AdminProfilePage from "./pages/admin/profile";
 import GetAllUsers from "./pages/admin/UserDelete";
 import AnnouncementPage from "./pages/admin/Announcement";
 import AdminLeaveRequests from "./pages/admin/AllLeave";
 import AdminLeaveUsageChart from "./pages/admin/ApexChartLeave";
+import CompanyRegisterPage from "./pages/admin/CompanyRegister";
 
 // Sokcet İo
 import { io } from "socket.io-client";
@@ -159,14 +160,6 @@ function App() {
             </PublicRoute>
           }
         />
-        <Route
-          path="/kayıt-ol"
-          element={
-            <PublicRoute>
-              <KayıtOl></KayıtOl>
-            </PublicRoute>
-          }
-        />
 
         {/* Private Route */}
         <Route
@@ -224,6 +217,22 @@ function App() {
           element={
             <AdminRoute>
               <AdminProfilePage></AdminProfilePage>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/personel-register"
+          element={
+            <AdminRoute>
+              <PersonelRegister></PersonelRegister>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/company-register"
+          element={
+            <AdminRoute>
+              <CompanyRegisterPage></CompanyRegisterPage>
             </AdminRoute>
           }
         />

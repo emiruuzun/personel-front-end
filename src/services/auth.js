@@ -3,31 +3,6 @@ import { setCookie, deleteCookie, getCookie } from "../utils/cookie-manager";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL; // API base URL'sini al
 
-export const registerUser = async (user, navigate) => {
-  try {
-    const apiRequest = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user),
-    });
-
-    const data = await apiRequest.json();
-    if (data.success) {
-      toast.success("Registration successful", { autoClose: 2000 });
-      setTimeout(() => {
-        navigate("/giris");
-      }, 3000);
-    } else {
-      toast.error(data.message);
-    }
-    return data;
-  } catch (error) {
-    console.error("API request failed:", error);
-    toast.error("Registration failed");
-    throw new Error("API request failed");
-  }
-};
-
 export const loginUser = async (user, navigate) => {
   const { name, email, password } = user;
 
