@@ -6,6 +6,7 @@ import {
   addDailyWorkRecord,
   updateDailyWorkRecord,
   getDailyWorkRecords,
+  deleteDailyWorkRecord,
 } from "../../../services/admin";
 
 import {
@@ -172,13 +173,23 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const handleUnassignPersonnel = (companyId, personnelId) => {
-    const company = companies.find((c) => c.id === companyId);
-    const personnelToUnassign = company?.personnel.find(
-      (p) => p.id === personnelId
-    );
+  const handleUnassignPersonnel = async (
+    companyId,
+    personnelId,
+    dailyRecordId
+  ) => {
+    try {
+      const company = companies.find((c) => c.id === companyId);
+      const personnelToUnassign = company?.personnel.find(
+        (p) => p.id === personnelId
+      );
 
-    if (personnelToUnassign) {
+      if (!personnelToUnassign) {
+        console.error("Personnel not found");
+        return;
+      }
+
+      // Frontend state'ini güncelle
       setCompanies((prevCompanies) =>
         prevCompanies.map((company) =>
           company.id === companyId
@@ -198,6 +209,20 @@ function PersonnelJobTrackingPage() {
           name: personnelToUnassign.name,
         },
       ]);
+
+      // Backend'de silme işlemini gerçekleştir
+      await deleteDailyWorkRecord(dailyRecordId);
+
+      console.log("Personel başarıyla atamadan çıkarıldı ve kayıt silindi.");
+    } catch (error) {
+      console.error("Personel atamadan çıkarılırken bir hata oluştu:", error);
+      // Hata durumunda UI'ı eski haline getir
+      setCompanies((prevCompanies) => [...prevCompanies]);
+      setUnassignedPersonnel((prev) => [...prev]);
+      // Kullanıcıya hata mesajı göster
+      alert(
+        "Personel atamadan çıkarılırken bir hata oluştu. Lütfen tekrar deneyin."
+      );
     }
   };
 
@@ -359,7 +384,8 @@ function PersonnelJobTrackingPage() {
                                 onClick={() =>
                                   handleUnassignPersonnel(
                                     activeCompany,
-                                    person.id
+                                    person.id,
+                                    person.recordId
                                   )
                                 }
                                 className="text-red-500 hover:text-red-700"

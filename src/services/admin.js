@@ -347,3 +347,30 @@ export const getDailyWorkRecords = async (date) => {
     return { success: false, message: "Kayıt alınamadı." };
   }
 };
+export const deleteDailyWorkRecord = async (id) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/daily-work-record/delete/${id}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer: ${getCookie("access_token")}`, // Auth token ekle
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      toast.error(data.message || "Günlük iş kaydı silinemedi.");
+      throw new Error(data.message || "Günlük iş kaydı silinemedi.");
+    }
+
+    // Başarılı silme mesajı
+    toast.success("Günlük iş kaydı başarıyla silindi.");
+    return data;
+  } catch (error) {
+    console.error("Günlük iş kaydı silinirken hata oluştu:", error);
+    throw error;
+  }
+};
