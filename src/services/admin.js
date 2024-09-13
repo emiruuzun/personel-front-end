@@ -246,3 +246,65 @@ export const getAllCompanies = async () => {
     throw new Error("API request failed");
   }
 };
+
+export const addDailyWorkRecord = async (recordData) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/daily-work-record/add`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+        body: JSON.stringify(recordData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      toast.success("Günlük iş kaydı başarıyla eklendi!", { autoClose: 2000 });
+    } else {
+      toast.error(data.message || "Günlük iş kaydı eklenemedi.");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API isteği başarısız oldu:", error);
+    toast.error("Günlük iş kaydı eklenemedi.");
+    throw new Error("API request failed");
+  }
+};
+
+export const updateDailyWorkRecord = async (recordId, updateData) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/daily-work-record/update/${recordId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+        body: JSON.stringify(updateData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      toast.success("Günlük iş kaydı başarıyla güncellendi!", {
+        autoClose: 2000,
+      });
+      return data.data;
+    } else {
+      toast.error(data.message || "Günlük iş kaydı güncellenemedi.");
+      return null;
+    }
+  } catch (error) {
+    console.error("API isteği başarısız oldu:", error);
+    toast.error("Günlük iş kaydı güncellenemedi.");
+    throw new Error("API request failed");
+  }
+};

@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
-import { getAllCompanies, getAllUsers } from "../../../services/admin";
+import {
+  getAllCompanies,
+  getAllUsers,
+  addDailyWorkRecord,
+  updateDailyWorkRecord,
+} from "../../../services/admin";
+
 import {
   FaUsers,
   FaBuilding,
   FaUserPlus,
   FaUserMinus,
   FaEdit,
-  FaClock,
   FaTimes,
+  FaSave,
 } from "react-icons/fa";
 
 function PersonnelJobTrackingPage() {
@@ -18,7 +24,12 @@ function PersonnelJobTrackingPage() {
   const [activeCompany, setActiveCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPerson, setEditingPerson] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedPersonnelForAssignment, setSelectedPersonnelForAssignment] =
+    useState(null);
+  const [assignmentJobStartTime, setAssignmentJobStartTime] = useState("");
+  const [temporaryAssignments, setTemporaryAssignments] = useState([]); // Yeni state
 
   useEffect(() => {
     fetchCompanies();
@@ -59,21 +70,45 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const handleAssignPersonnel = (companyId, personnelId) => {
-    const selectedPersonnel = unassignedPersonnel.find(
-      (p) => p.id === personnelId
-    );
-    if (selectedPersonnel) {
+  const openAssignModal = (person) => {
+    setSelectedPersonnelForAssignment(person);
+    setAssignmentJobStartTime("");
+    setShowAssignModal(true);
+  };
+
+  const closeAssignModal = () => {
+    setSelectedPersonnelForAssignment(null);
+    setAssignmentJobStartTime("");
+    setShowAssignModal(false);
+  };
+
+  const handleConfirmAssignPersonnel = () => {
+    if (selectedPersonnelForAssignment && assignmentJobStartTime) {
+      const newAssignment = {
+        personnel_id: selectedPersonnelForAssignment.id,
+        company_id: activeCompany,
+        date: new Date(),
+        job_start_time: assignmentJobStartTime,
+      };
+
+      // Geçici atama listesine ekle
+      setTemporaryAssignments((prevAssignments) => [
+        ...prevAssignments,
+        newAssignment,
+      ]);
+
+      // UI güncellemesi
       setCompanies((prevCompanies) =>
         prevCompanies.map((company) =>
-          company.id === companyId
+          company.id === activeCompany
             ? {
                 ...company,
                 personnel: [
                   ...company.personnel,
                   {
-                    ...selectedPersonnel,
-                    workHours: { startTime: "", endTime: "" },
+                    ...selectedPersonnelForAssignment,
+                    jobStartTime: assignmentJobStartTime,
+                    jobEndTime: "",
                     overtimeHours: { startTime: "", endTime: "" },
                   },
                 ],
@@ -81,9 +116,14 @@ function PersonnelJobTrackingPage() {
             : company
         )
       );
+
       setUnassignedPersonnel((prevPersonnel) =>
-        prevPersonnel.filter((p) => p.id !== personnelId)
+        prevPersonnel.filter((p) => p.id !== selectedPersonnelForAssignment.id)
       );
+
+      closeAssignModal();
+    } else {
+      alert("Lütfen iş başlangıç saatini giriniz.");
     }
   };
 
@@ -116,32 +156,85 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const handleUpdatePersonnelTime = () => {
-    setCompanies((prevCompanies) =>
-      prevCompanies.map((company) =>
-        company.id === activeCompany
-          ? {
-              ...company,
-              personnel: company.personnel.map((person) =>
-                person.id === editingPerson.id
-                  ? { ...person, ...editingPerson }
-                  : person
-              ),
-            }
-          : company
-      )
-    );
-    closeEditModal();
+  const handleUpdatePersonnelTime = async () => {
+    try {
+      const updateData = {
+        job_end_time: editingPerson.jobEndTime,
+        overtime_hours: editingPerson.overtimeHours,
+      };
+
+      const recordId = editingPerson.recordId;
+
+      const updatedRecord = await updateDailyWorkRecord(recordId, updateData);
+
+      if (updatedRecord) {
+        setCompanies((prevCompanies) =>
+          prevCompanies.map((company) =>
+            company.id === activeCompany
+              ? {
+                  ...company,
+                  personnel: company.personnel.map((person) =>
+                    person.id === editingPerson.id
+                      ? { ...editingPerson }
+                      : person
+                  ),
+                }
+              : company
+          )
+        );
+        closeEditModal();
+      } else {
+        alert("Günlük iş kaydı güncellenemedi.");
+      }
+    } catch (error) {
+      console.error("Çalışma saatleri güncellenirken hata oluştu:", error);
+      alert("Çalışma saatleri güncellenirken bir hata oluştu.");
+    }
   };
 
   const openEditModal = (person) => {
     setEditingPerson(person);
-    setShowModal(true);
+    setShowEditModal(true);
   };
 
   const closeEditModal = () => {
     setEditingPerson(null);
-    setShowModal(false);
+    setShowEditModal(false);
+  };
+
+  const handleSaveAllAssignments = async () => {
+    if (temporaryAssignments.length === 0 && unassignedPersonnel.length === 0) {
+      alert("Kaydedilecek atama bulunmamaktadır.");
+      return;
+    }
+
+    try {
+      // Atanmış personellerin kayıtları
+      const saveAssignedPromises = temporaryAssignments.map((assignment) =>
+        addDailyWorkRecord({ ...assignment, isAssigned: true })
+      );
+
+      // Atanmamış personellerin kayıtları
+      const saveUnassignedPromises = unassignedPersonnel.map((person) =>
+        addDailyWorkRecord({
+          personnel_id: person.id,
+          company_id: null, // İşe atanmayan personel olduğu için boş bırak
+          date: new Date(), // Veya seçili tarih
+          job_start_time: "", // Boş bırak
+          job_end_time: "", // Boş bırak
+          isAssigned: false, // Atanmadığı için false
+        })
+      );
+
+      // Promise.all ile tüm kayıtları yapalım
+      await Promise.all([...saveAssignedPromises, ...saveUnassignedPromises]);
+
+      setTemporaryAssignments([]);
+      alert("Tüm atamalar başarıyla kaydedildi!");
+    } catch (error) {
+      console.error("Atamalar kaydedilirken hata oluştu:", error);
+      alert("Atamalar kaydedilirken bir hata oluştu.");
+    }
   };
 
   const filteredPersonnel = unassignedPersonnel.filter((person) =>
@@ -156,7 +249,7 @@ function PersonnelJobTrackingPage() {
         </h2>
 
         <div className="flex gap-6">
-          {/* Company List */}
+          {/* Firma Listesi */}
           <div className="w-1/4 bg-white rounded-lg shadow-lg p-4 h-[calc(100vh-200px)] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-gray-700 flex items-center">
               <FaBuilding className="mr-2" /> Firmalar
@@ -181,9 +274,9 @@ function PersonnelJobTrackingPage() {
             </ul>
           </div>
 
-          {/* Active Company Details and Unassigned Personnel */}
+          {/* Aktif Firma Detayları ve Atanmamış Personel */}
           <div className="w-3/4 space-y-6">
-            {/* Active Company Details */}
+            {/* Aktif Firma Detayları */}
             <div className="bg-white rounded-lg shadow-lg p-4">
               {activeCompany && (
                 <div>
@@ -191,7 +284,7 @@ function PersonnelJobTrackingPage() {
                     {companies.find((c) => c.id === activeCompany)?.name}
                   </h3>
 
-                  {/* Assigned Personnel */}
+                  {/* Atanmış Personel */}
                   <div>
                     <h4 className="text-lg font-semibold mb-2 text-gray-700">
                       Atanmış Personel
@@ -204,15 +297,26 @@ function PersonnelJobTrackingPage() {
                             key={person.id}
                             className="flex items-center justify-between bg-white p-3 rounded-lg shadow"
                           >
-                            <span className="font-medium">{person.name}</span>
+                            <div>
+                              <span className="font-medium">{person.name}</span>
+                              <div className="text-sm text-gray-600">
+                                İş Saatleri:
+                                {person.jobStartTime && person.jobEndTime
+                                  ? ` ${person.jobStartTime} - ${person.jobEndTime}`
+                                  : person.jobStartTime
+                                  ? ` ${person.jobStartTime} - ?`
+                                  : " Saat belirtilmedi"}
+                              </div>
+                              {person.overtimeHours?.startTime &&
+                                person.overtimeHours?.endTime && (
+                                  <div className="text-sm text-gray-600">
+                                    Mesai Saatleri:{" "}
+                                    {person.overtimeHours.startTime} -{" "}
+                                    {person.overtimeHours.endTime}
+                                  </div>
+                                )}
+                            </div>
                             <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-600">
-                                <FaClock className="inline mr-1" />
-                                {person.workHours.startTime &&
-                                person.workHours.endTime
-                                  ? `${person.workHours.startTime} - ${person.workHours.endTime}`
-                                  : "Saat belirtilmedi"}
-                              </span>
                               <button
                                 onClick={() => openEditModal(person)}
                                 className="text-blue-500 hover:text-blue-700"
@@ -241,7 +345,7 @@ function PersonnelJobTrackingPage() {
               )}
             </div>
 
-            {/* Unassigned Personnel */}
+            {/* Atanmamış Personel */}
             <div className="bg-white rounded-lg shadow-lg p-4">
               <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                 <FaUserPlus className="mr-2" /> Atanabilir Personel
@@ -261,9 +365,7 @@ function PersonnelJobTrackingPage() {
                   >
                     <span>{person.name}</span>
                     <button
-                      onClick={() =>
-                        handleAssignPersonnel(activeCompany, person.id)
-                      }
+                      onClick={() => openAssignModal(person)}
                       className="text-green-500 hover:text-green-700"
                       title="Personeli Ata"
                     >
@@ -275,10 +377,66 @@ function PersonnelJobTrackingPage() {
             </div>
           </div>
         </div>
+
+        {/* Kaydet Butonu */}
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={handleSaveAllAssignments}
+            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center"
+          >
+            <FaSave className="mr-2" /> Kaydet
+          </button>
+        </div>
       </div>
 
-      {/* Modal for editing */}
-      {showModal && (
+      {/* Atama Modalı */}
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">
+                {selectedPersonnelForAssignment.name} için İş Başlangıç Saati
+              </h3>
+              <button
+                onClick={closeAssignModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  İş Başlangıç Saati
+                </label>
+                <input
+                  type="time"
+                  value={assignmentJobStartTime}
+                  onChange={(e) => setAssignmentJobStartTime(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={handleConfirmAssignPersonnel}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Ata
+              </button>
+              <button
+                onClick={closeAssignModal}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Düzenleme Modalı */}
+      {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
             <div className="flex justify-between items-center mb-4">
@@ -295,39 +453,30 @@ function PersonnelJobTrackingPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Çalışma Saatleri
+                  İş Başlangıç Saati
                 </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="time"
-                    value={editingPerson.workHours.startTime}
-                    onChange={(e) =>
-                      setEditingPerson({
-                        ...editingPerson,
-                        workHours: {
-                          ...editingPerson.workHours,
-                          startTime: e.target.value,
-                        },
-                      })
-                    }
-                    className="flex-1 p-2 border rounded"
-                  />
-                  <span className="self-center">-</span>
-                  <input
-                    type="time"
-                    value={editingPerson.workHours.endTime}
-                    onChange={(e) =>
-                      setEditingPerson({
-                        ...editingPerson,
-                        workHours: {
-                          ...editingPerson.workHours,
-                          endTime: e.target.value,
-                        },
-                      })
-                    }
-                    className="flex-1 p-2 border rounded"
-                  />
-                </div>
+                <input
+                  type="time"
+                  value={editingPerson.jobStartTime}
+                  disabled
+                  className="w-full p-2 border rounded bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  İş Bitiş Saati
+                </label>
+                <input
+                  type="time"
+                  value={editingPerson.jobEndTime}
+                  onChange={(e) =>
+                    setEditingPerson({
+                      ...editingPerson,
+                      jobEndTime: e.target.value,
+                    })
+                  }
+                  className="w-full p-2 border rounded"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -336,7 +485,7 @@ function PersonnelJobTrackingPage() {
                 <div className="flex space-x-2">
                   <input
                     type="time"
-                    value={editingPerson.overtimeHours.startTime}
+                    value={editingPerson.overtimeHours?.startTime}
                     onChange={(e) =>
                       setEditingPerson({
                         ...editingPerson,
@@ -351,7 +500,7 @@ function PersonnelJobTrackingPage() {
                   <span className="self-center">-</span>
                   <input
                     type="time"
-                    value={editingPerson.overtimeHours.endTime}
+                    value={editingPerson.overtimeHours?.endTime}
                     onChange={(e) =>
                       setEditingPerson({
                         ...editingPerson,
