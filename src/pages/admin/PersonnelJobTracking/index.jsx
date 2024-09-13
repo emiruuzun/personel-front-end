@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
 import {
   getAllCompanies,
   getAllUsers,
   addDailyWorkRecord,
   updateDailyWorkRecord,
+  getDailyWorkRecords,
 } from "../../../services/admin";
 
 import {
@@ -18,9 +19,10 @@ import {
 } from "react-icons/fa";
 
 function PersonnelJobTrackingPage() {
-  const [selectedDate] = useState(new Date().toLocaleDateString());
+  const currentDate = new Date().toISOString().split("T")[0];
   const [companies, setCompanies] = useState([]);
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
+  const [allPersonnel, setAllPersonnel] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingPerson, setEditingPerson] = useState(null);
@@ -29,13 +31,68 @@ function PersonnelJobTrackingPage() {
   const [selectedPersonnelForAssignment, setSelectedPersonnelForAssignment] =
     useState(null);
   const [assignmentJobStartTime, setAssignmentJobStartTime] = useState("");
-  const [temporaryAssignments, setTemporaryAssignments] = useState([]); // Yeni state
+  const [temporaryAssignments, setTemporaryAssignments] = useState([]);
 
-  useEffect(() => {
-    fetchCompanies();
-    fetchPersonnel();
-  }, []);
+  const fetchAllPersonnel = async () => {
+    try {
+      const response = await getAllUsers();
+      if (response.success) {
+        setAllPersonnel(
+          response.data.map((person) => ({
+            id: person._id,
+            name: person.name,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Tüm personel alınamadı.", error);
+    }
+  };
 
+  const fetchDailyWorkRecords = useCallback(async () => {
+    try {
+      const response = await getDailyWorkRecords(currentDate);
+      if (response.success) {
+        const assignedPersonnel = response.data.assigned.map((record) => ({
+          id: record.personnel_id._id,
+          name: record.personnel_id.name,
+          jobStartTime: record.job_start_time,
+          jobEndTime: record.job_end_time,
+          overtimeHours: record.overtime_hours,
+          company_id: record.company_id,
+          recordId: record._id,
+        }));
+
+        const unassignedPersonnelData = response.data.unassigned.map(
+          (record) => ({
+            id: record.personnel_id._id,
+            name: record.personnel_id.name,
+          })
+        );
+
+        setUnassignedPersonnel(unassignedPersonnelData);
+
+        setCompanies((prevCompanies) =>
+          prevCompanies.map((company) => ({
+            ...company,
+            personnel: assignedPersonnel.filter(
+              (person) => person.company_id === company.id
+            ),
+          }))
+        );
+
+        if (
+          assignedPersonnel.length === 0 &&
+          unassignedPersonnelData.length === 0
+        ) {
+          setUnassignedPersonnel(allPersonnel);
+        }
+      }
+    } catch (error) {
+      console.error("Günlük iş kayıtları alınamadı.", error);
+      setUnassignedPersonnel(allPersonnel);
+    }
+  }, [allPersonnel, currentDate]);
   const fetchCompanies = async () => {
     try {
       const response = await getAllCompanies();
@@ -55,20 +112,16 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const fetchPersonnel = async () => {
-    try {
-      const response = await getAllUsers();
-      if (response.success) {
-        const personnelData = response.data.map((person) => ({
-          id: person._id,
-          name: person.name,
-        }));
-        setUnassignedPersonnel(personnelData);
-      }
-    } catch (error) {
-      console.error("Personeller alınamadı.", error);
+  useEffect(() => {
+    fetchCompanies();
+    fetchAllPersonnel();
+  }, []);
+
+  useEffect(() => {
+    if (allPersonnel.length > 0) {
+      fetchDailyWorkRecords();
     }
-  };
+  }, [fetchDailyWorkRecords, allPersonnel]);
 
   const openAssignModal = (person) => {
     setSelectedPersonnelForAssignment(person);
@@ -87,17 +140,15 @@ function PersonnelJobTrackingPage() {
       const newAssignment = {
         personnel_id: selectedPersonnelForAssignment.id,
         company_id: activeCompany,
-        date: new Date(),
+        date: currentDate,
         job_start_time: assignmentJobStartTime,
       };
 
-      // Geçici atama listesine ekle
       setTemporaryAssignments((prevAssignments) => [
         ...prevAssignments,
         newAssignment,
       ]);
 
-      // UI güncellemesi
       setCompanies((prevCompanies) =>
         prevCompanies.map((company) =>
           company.id === activeCompany
@@ -209,28 +260,26 @@ function PersonnelJobTrackingPage() {
     }
 
     try {
-      // Atanmış personellerin kayıtları
       const saveAssignedPromises = temporaryAssignments.map((assignment) =>
         addDailyWorkRecord({ ...assignment, isAssigned: true })
       );
 
-      // Atanmamış personellerin kayıtları
       const saveUnassignedPromises = unassignedPersonnel.map((person) =>
         addDailyWorkRecord({
           personnel_id: person.id,
-          company_id: null, // İşe atanmayan personel olduğu için boş bırak
-          date: new Date(), // Veya seçili tarih
-          job_start_time: "", // Boş bırak
-          job_end_time: "", // Boş bırak
-          isAssigned: false, // Atanmadığı için false
+          company_id: null,
+          date: currentDate,
+          job_start_time: "",
+          job_end_time: "",
+          isAssigned: false,
         })
       );
 
-      // Promise.all ile tüm kayıtları yapalım
       await Promise.all([...saveAssignedPromises, ...saveUnassignedPromises]);
 
       setTemporaryAssignments([]);
       alert("Tüm atamalar başarıyla kaydedildi!");
+      fetchDailyWorkRecords(); // Güncel verileri yeniden yükle
     } catch (error) {
       console.error("Atamalar kaydedilirken hata oluştu:", error);
       alert("Atamalar kaydedilirken bir hata oluştu.");
@@ -245,11 +294,10 @@ function PersonnelJobTrackingPage() {
     <AdminDashboardlayout>
       <div className="p-6 bg-gray-100 min-h-screen">
         <h2 className="text-3xl font-extrabold text-indigo-500 mb-6 flex items-center">
-          <FaUsers className="mr-2" /> Personel İş Takibi - {selectedDate}
+          <FaUsers className="mr-2" /> Personel İş Takibi - {currentDate}
         </h2>
 
         <div className="flex gap-6">
-          {/* Firma Listesi */}
           <div className="w-1/4 bg-white rounded-lg shadow-lg p-4 h-[calc(100vh-200px)] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-gray-700 flex items-center">
               <FaBuilding className="mr-2" /> Firmalar
@@ -274,9 +322,7 @@ function PersonnelJobTrackingPage() {
             </ul>
           </div>
 
-          {/* Aktif Firma Detayları ve Atanmamış Personel */}
           <div className="w-3/4 space-y-6">
-            {/* Aktif Firma Detayları */}
             <div className="bg-white rounded-lg shadow-lg p-4">
               {activeCompany && (
                 <div>
@@ -284,7 +330,6 @@ function PersonnelJobTrackingPage() {
                     {companies.find((c) => c.id === activeCompany)?.name}
                   </h3>
 
-                  {/* Atanmış Personel */}
                   <div>
                     <h4 className="text-lg font-semibold mb-2 text-gray-700">
                       Atanmış Personel
@@ -345,7 +390,6 @@ function PersonnelJobTrackingPage() {
               )}
             </div>
 
-            {/* Atanmamış Personel */}
             <div className="bg-white rounded-lg shadow-lg p-4">
               <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                 <FaUserPlus className="mr-2" /> Atanabilir Personel
@@ -378,7 +422,6 @@ function PersonnelJobTrackingPage() {
           </div>
         </div>
 
-        {/* Kaydet Butonu */}
         <div className="fixed bottom-4 right-4">
           <button
             onClick={handleSaveAllAssignments}
@@ -389,7 +432,6 @@ function PersonnelJobTrackingPage() {
         </div>
       </div>
 
-      {/* Atama Modalı */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
@@ -435,7 +477,6 @@ function PersonnelJobTrackingPage() {
         </div>
       )}
 
-      {/* Düzenleme Modalı */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">

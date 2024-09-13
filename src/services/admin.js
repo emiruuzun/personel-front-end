@@ -308,3 +308,42 @@ export const updateDailyWorkRecord = async (recordId, updateData) => {
     throw new Error("API request failed");
   }
 };
+export const getDailyWorkRecords = async (date) => {
+  console.log(date); // Tarih formatını kontrol edin
+  try {
+    let formattedDate = "";
+
+    if (date.includes(".")) {
+      // Eğer tarih "DD.MM.YYYY" formatındaysa
+      const [day, month, year] = date.split(".");
+      formattedDate = `${year}-${month}-${day}`; // "YYYY-MM-DD" formatına çevir
+    } else if (date.includes("-")) {
+      // Eğer tarih "YYYY-MM-DD" formatındaysa
+      formattedDate = date; // Zaten doğru formatta
+    } else {
+      console.error(
+        "Invalid date format. Expected format: DD.MM.YYYY or YYYY-MM-DD"
+      );
+      return { success: false, message: "Geçersiz tarih formatı." };
+    }
+
+    console.log(formattedDate); // Formatted date kontrolü
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/daily-work-records?date=${formattedDate}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching daily work records:", error);
+    return { success: false, message: "Kayıt alınamadı." };
+  }
+};
