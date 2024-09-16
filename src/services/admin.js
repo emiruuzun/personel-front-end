@@ -327,8 +327,6 @@ export const getDailyWorkRecords = async (date) => {
       return { success: false, message: "Geçersiz tarih formatı." };
     }
 
-    console.log(formattedDate); // Formatted date kontrolü
-
     const response = await fetch(
       `${API_BASE_URL}/admin/daily-work-records?date=${formattedDate}`,
       {

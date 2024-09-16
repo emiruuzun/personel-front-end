@@ -282,23 +282,55 @@ function PersonnelJobTrackingPage() {
 
     try {
       // Atanmış personelleri kaydet
-      const saveAssignedPromises = temporaryAssignments.map((assignment) => {
-        console.log("Atanmış personel kaydediliyor:", assignment);
-        return addDailyWorkRecord({ ...assignment, isAssigned: true });
-      });
+      const saveAssignedPromises = temporaryAssignments.map(
+        async (assignment) => {
+          // Veritabanında mevcut mu kontrol et
+          const existingRecord = await getDailyWorkRecords(currentDate).then(
+            (response) =>
+              response.data.assigned.find(
+                (record) => record.personnel_id._id === assignment.personnel_id
+              )
+          );
+
+          // Eğer mevcut değilse, yeni kayıt olarak ekle
+          if (!existingRecord) {
+            console.log("Yeni atanmış personel kaydediliyor:", assignment);
+            return addDailyWorkRecord({ ...assignment, isAssigned: true });
+          } else {
+            console.log("Mevcut atanmış personel güncelleniyor:", assignment);
+            // Mevcutsa, sadece değişiklik yapıldıysa güncelle
+            return updateDailyWorkRecord(existingRecord._id, {
+              ...assignment,
+              isAssigned: true,
+            });
+          }
+        }
+      );
 
       // Atanmamış personelleri kaydet
-      const saveUnassignedPromises = unassignedPersonnel.map((person) => {
+      const saveUnassignedPromises = unassignedPersonnel.map(async (person) => {
+        // Veritabanında mevcut mu kontrol et
+        const existingRecord = await getDailyWorkRecords(currentDate).then(
+          (response) =>
+            response.data.unassigned.find(
+              (record) => record.personnel_id._id === person.id
+            )
+        );
+
         const unassignedRecord = {
           personnel_id: person.id,
-          company_id: null, // Atanmamış olduğundan firma yok
+          company_id: null,
           date: currentDate,
-          job_start_time: "", // İş atanmadığı için boş bırakıldı
-          job_end_time: "", // İş atanmadığı için boş bırakıldı
-          isAssigned: false, // Atanmamış olarak işaretle
+          job_start_time: "",
+          job_end_time: "",
+          isAssigned: false,
         };
-        console.log("Atanmamış personel kaydediliyor:", unassignedRecord);
-        return addDailyWorkRecord(unassignedRecord);
+
+        if (!existingRecord) {
+          return addDailyWorkRecord(unassignedRecord);
+        } else {
+          return Promise.resolve(); // Kaydedilmişse hiçbir işlem yapma
+        }
       });
 
       // Tüm kayıt işlemlerini bekle
