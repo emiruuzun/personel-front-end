@@ -282,21 +282,18 @@ function PersonnelJobTrackingPage() {
     }
 
     try {
-      const saveAssignedPromises = temporaryAssignments.map((assignment) =>
-        addDailyWorkRecord({ ...assignment, isAssigned: true })
-      );
-
-      await Promise.all(saveAssignedPromises);
+      for (const assignment of temporaryAssignments) {
+        await addDailyWorkRecord(assignment);
+      }
 
       setTemporaryAssignments([]);
       alert("Tüm atamalar başarıyla kaydedildi!");
-      fetchDailyWorkRecords(); // Reload updated data
+      fetchDailyWorkRecords(); // Veriyi yeniden yükle
     } catch (error) {
       console.error("Atamalar kaydedilirken hata oluştu:", error);
       alert("Atamalar kaydedilirken bir hata oluştu.");
     }
   };
-
   const filteredPersonnel = unassignedPersonnel.filter((person) =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
