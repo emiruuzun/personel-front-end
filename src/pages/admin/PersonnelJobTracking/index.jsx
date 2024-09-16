@@ -8,6 +8,9 @@ import {
   getDailyWorkRecords,
   deleteDailyWorkRecord,
 } from "../../../services/admin";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import tr from "date-fns/locale/tr"; // Türkçe dil desteği için
 
 import {
   FaUsers,
@@ -17,10 +20,11 @@ import {
   FaEdit,
   FaTimes,
   FaSave,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 function PersonnelJobTrackingPage() {
-  const currentDate = new Date().toISOString().split("T")[0];
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [companies, setCompanies] = useState([]);
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
   const [allPersonnel, setAllPersonnel] = useState([]);
@@ -33,8 +37,7 @@ function PersonnelJobTrackingPage() {
     useState(null);
   const [assignmentJobStartTime, setAssignmentJobStartTime] = useState("");
   const [temporaryAssignments, setTemporaryAssignments] = useState([]);
-
-  // Fetch all personnel
+  registerLocale("tr", tr);
   const fetchAllPersonnel = async () => {
     try {
       const response = await getAllUsers();
@@ -51,10 +54,10 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  // Fetch daily work records and determine unassigned personnel
   const fetchDailyWorkRecords = useCallback(async () => {
     try {
-      const response = await getDailyWorkRecords(currentDate);
+      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const response = await getDailyWorkRecords(formattedDate);
       if (response.success) {
         const assignedPersonnel = response.data.assigned.map((record) => ({
           id: record.personnel_id?._id,
@@ -85,9 +88,8 @@ function PersonnelJobTrackingPage() {
     } catch (error) {
       console.error("Günlük iş kayıtları alınamadı.", error);
     }
-  }, [allPersonnel, currentDate]);
+  }, [allPersonnel, selectedDate]);
 
-  // Fetch companies
   const fetchCompanies = async () => {
     try {
       const response = await getAllCompanies();
@@ -116,7 +118,7 @@ function PersonnelJobTrackingPage() {
     if (allPersonnel.length > 0) {
       fetchDailyWorkRecords();
     }
-  }, [fetchDailyWorkRecords, allPersonnel]);
+  }, [fetchDailyWorkRecords, allPersonnel, selectedDate]);
 
   const openAssignModal = (person) => {
     setSelectedPersonnelForAssignment(person);
@@ -135,7 +137,7 @@ function PersonnelJobTrackingPage() {
       const newAssignment = {
         personnel_id: selectedPersonnelForAssignment.id,
         company_id: activeCompany,
-        date: currentDate,
+        date: selectedDate.toISOString().split("T")[0],
         job_start_time: assignmentJobStartTime,
       };
 
@@ -189,7 +191,6 @@ function PersonnelJobTrackingPage() {
         return;
       }
 
-      // Frontend state'ini güncelle
       setCompanies((prevCompanies) =>
         prevCompanies.map((company) =>
           company.id === companyId
@@ -210,16 +211,13 @@ function PersonnelJobTrackingPage() {
         },
       ]);
 
-      // Backend'de silme işlemini gerçekleştir
       await deleteDailyWorkRecord(dailyRecordId);
 
       console.log("Personel başarıyla atamadan çıkarıldı ve kayıt silindi.");
     } catch (error) {
       console.error("Personel atamadan çıkarılırken bir hata oluştu:", error);
-      // Hata durumunda UI'ı eski haline getir
       setCompanies((prevCompanies) => [...prevCompanies]);
       setUnassignedPersonnel((prev) => [...prev]);
-      // Kullanıcıya hata mesajı göster
       alert(
         "Personel atamadan çıkarılırken bir hata oluştu. Lütfen tekrar deneyin."
       );
@@ -229,12 +227,12 @@ function PersonnelJobTrackingPage() {
   const handleUpdatePersonnelTime = async () => {
     try {
       const updateData = {
-        job_end_time: editingPerson.jobEndTime || "", // If undefined, set to empty string
+        job_end_time: editingPerson.jobEndTime || "",
         overtime_hours: {
           startTime: editingPerson.overtimeHours?.startTime || "",
           endTime: editingPerson.overtimeHours?.endTime || "",
-        }, // If undefined, set default values
-        notes: editingPerson.notes || "", // Notes alanını da ekleyin
+        },
+        notes: editingPerson.notes || "",
       };
 
       const recordId = editingPerson.recordId;
@@ -275,6 +273,7 @@ function PersonnelJobTrackingPage() {
     setEditingPerson(null);
     setShowEditModal(false);
   };
+
   const handleSaveAllAssignments = async () => {
     if (temporaryAssignments.length === 0 && unassignedPersonnel.length === 0) {
       alert("Kaydedilecek atama bulunmamaktadır.");
@@ -282,24 +281,21 @@ function PersonnelJobTrackingPage() {
     }
 
     try {
-      // Atanmış personelleri kaydet
       const saveAssignedPromises = temporaryAssignments.map(
         async (assignment) => {
-          // Veritabanında mevcut mu kontrol et
-          const existingRecord = await getDailyWorkRecords(currentDate).then(
-            (response) =>
-              response.data.assigned.find(
-                (record) => record.personnel_id._id === assignment.personnel_id
-              )
+          const existingRecord = await getDailyWorkRecords(
+            selectedDate.toISOString().split("T")[0]
+          ).then((response) =>
+            response.data.assigned.find(
+              (record) => record.personnel_id._id === assignment.personnel_id
+            )
           );
 
-          // Eğer mevcut değilse, yeni kayıt olarak ekle
           if (!existingRecord) {
             console.log("Yeni atanmış personel kaydediliyor:", assignment);
             return addDailyWorkRecord({ ...assignment, isAssigned: true });
           } else {
             console.log("Mevcut atanmış personel güncelleniyor:", assignment);
-            // Mevcutsa, sadece değişiklik yapıldıysa güncelle
             return updateDailyWorkRecord(existingRecord._id, {
               ...assignment,
               isAssigned: true,
@@ -308,20 +304,19 @@ function PersonnelJobTrackingPage() {
         }
       );
 
-      // Atanmamış personelleri kaydet
       const saveUnassignedPromises = unassignedPersonnel.map(async (person) => {
-        // Veritabanında mevcut mu kontrol et
-        const existingRecord = await getDailyWorkRecords(currentDate).then(
-          (response) =>
-            response.data.unassigned.find(
-              (record) => record.personnel_id._id === person.id
-            )
+        const existingRecord = await getDailyWorkRecords(
+          selectedDate.toISOString().split("T")[0]
+        ).then((response) =>
+          response.data.unassigned.find(
+            (record) => record.personnel_id._id === person.id
+          )
         );
 
         const unassignedRecord = {
           personnel_id: person.id,
           company_id: null,
-          date: currentDate,
+          date: selectedDate.toISOString().split("T")[0],
           job_start_time: "",
           job_end_time: "",
           isAssigned: false,
@@ -330,16 +325,15 @@ function PersonnelJobTrackingPage() {
         if (!existingRecord) {
           return addDailyWorkRecord(unassignedRecord);
         } else {
-          return Promise.resolve(); // Kaydedilmişse hiçbir işlem yapma
+          return Promise.resolve();
         }
       });
 
-      // Tüm kayıt işlemlerini bekle
       await Promise.all([...saveAssignedPromises, ...saveUnassignedPromises]);
 
       setTemporaryAssignments([]);
       alert("Tüm atamalar başarıyla kaydedildi!");
-      fetchDailyWorkRecords(); // Güncel verileri yeniden yükle
+      fetchDailyWorkRecords();
     } catch (error) {
       console.error("Atamalar kaydedilirken hata oluştu:", error);
       alert("Atamalar kaydedilirken bir hata oluştu.");
@@ -353,9 +347,21 @@ function PersonnelJobTrackingPage() {
   return (
     <AdminDashboardlayout>
       <div className="p-6 bg-gray-100 min-h-screen">
-        <h2 className="text-3xl font-extrabold text-indigo-500 mb-6 flex items-center">
-          <FaUsers className="mr-2" /> Personel İş Takibi - {currentDate}
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-extrabold text-indigo-500 flex items-center">
+            <FaUsers className="mr-2" /> Personel İş Takibi
+          </h2>
+          <div className="flex items-center">
+            <FaCalendarAlt className="mr-2 text-indigo-500" />
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              dateFormat="dd/MM/yyyy"
+              locale="tr"
+              className="p-2 border rounded"
+            />
+          </div>
+        </div>
 
         <div className="flex gap-6">
           <div className="w-1/4 bg-white rounded-lg shadow-lg p-4 h-[calc(100vh-200px)] overflow-y-auto">
@@ -559,7 +565,7 @@ function PersonnelJobTrackingPage() {
                 </label>
                 <input
                   type="time"
-                  value={editingPerson.jobStartTime || ""} // Varsayılan değeri boş string
+                  value={editingPerson.jobStartTime || ""}
                   disabled
                   className="w-full p-2 border rounded bg-gray-100"
                 />
@@ -570,7 +576,7 @@ function PersonnelJobTrackingPage() {
                 </label>
                 <input
                   type="time"
-                  value={editingPerson.jobEndTime || ""} // Varsayılan değeri boş string
+                  value={editingPerson.jobEndTime || ""}
                   onChange={(e) =>
                     setEditingPerson({
                       ...editingPerson,
@@ -587,7 +593,7 @@ function PersonnelJobTrackingPage() {
                 <div className="flex space-x-2">
                   <input
                     type="time"
-                    value={editingPerson.overtimeHours?.startTime || ""} // Varsayılan değeri boş string
+                    value={editingPerson.overtimeHours?.startTime || ""}
                     onChange={(e) =>
                       setEditingPerson({
                         ...editingPerson,
@@ -602,7 +608,7 @@ function PersonnelJobTrackingPage() {
                   <span className="self-center">-</span>
                   <input
                     type="time"
-                    value={editingPerson.overtimeHours?.endTime || ""} // Varsayılan değeri boş string
+                    value={editingPerson.overtimeHours?.endTime || ""}
                     onChange={(e) =>
                       setEditingPerson({
                         ...editingPerson,
