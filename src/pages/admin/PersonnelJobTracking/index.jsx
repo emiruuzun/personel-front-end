@@ -274,26 +274,45 @@ function PersonnelJobTrackingPage() {
     setEditingPerson(null);
     setShowEditModal(false);
   };
-
   const handleSaveAllAssignments = async () => {
-    if (temporaryAssignments.length === 0) {
+    if (temporaryAssignments.length === 0 && unassignedPersonnel.length === 0) {
       alert("Kaydedilecek atama bulunmamaktadır.");
       return;
     }
 
     try {
-      for (const assignment of temporaryAssignments) {
-        await addDailyWorkRecord(assignment);
-      }
+      // Atanmış personelleri kaydet
+      const saveAssignedPromises = temporaryAssignments.map((assignment) => {
+        console.log("Atanmış personel kaydediliyor:", assignment);
+        return addDailyWorkRecord({ ...assignment, isAssigned: true });
+      });
+
+      // Atanmamış personelleri kaydet
+      const saveUnassignedPromises = unassignedPersonnel.map((person) => {
+        const unassignedRecord = {
+          personnel_id: person.id,
+          company_id: null, // Atanmamış olduğundan firma yok
+          date: currentDate,
+          job_start_time: "", // İş atanmadığı için boş bırakıldı
+          job_end_time: "", // İş atanmadığı için boş bırakıldı
+          isAssigned: false, // Atanmamış olarak işaretle
+        };
+        console.log("Atanmamış personel kaydediliyor:", unassignedRecord);
+        return addDailyWorkRecord(unassignedRecord);
+      });
+
+      // Tüm kayıt işlemlerini bekle
+      await Promise.all([...saveAssignedPromises, ...saveUnassignedPromises]);
 
       setTemporaryAssignments([]);
       alert("Tüm atamalar başarıyla kaydedildi!");
-      fetchDailyWorkRecords(); // Veriyi yeniden yükle
+      fetchDailyWorkRecords(); // Güncel verileri yeniden yükle
     } catch (error) {
       console.error("Atamalar kaydedilirken hata oluştu:", error);
       alert("Atamalar kaydedilirken bir hata oluştu.");
     }
   };
+
   const filteredPersonnel = unassignedPersonnel.filter((person) =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
