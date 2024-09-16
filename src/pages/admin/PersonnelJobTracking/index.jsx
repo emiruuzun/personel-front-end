@@ -230,10 +230,11 @@ function PersonnelJobTrackingPage() {
     try {
       const updateData = {
         job_end_time: editingPerson.jobEndTime || "", // If undefined, set to empty string
-        overtime_hours: editingPerson.overtimeHours || {
-          startTime: "",
-          endTime: "",
+        overtime_hours: {
+          startTime: editingPerson.overtimeHours?.startTime || "",
+          endTime: editingPerson.overtimeHours?.endTime || "",
         }, // If undefined, set default values
+        notes: editingPerson.notes || "", // Notes alanını da ekleyin
       };
 
       const recordId = editingPerson.recordId;
