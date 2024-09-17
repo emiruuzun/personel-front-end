@@ -27,7 +27,11 @@ export const adminItem = [
         slug: "admin/personel-job",
         description: "Personnel Job Tracking",
       },
-
+      {
+        name: "Job Assignments List",
+        slug: "admin/personnel-assignments",
+        description: "Job Assignments List",
+      },
       {
         name: "User Settings",
         slug: "admin/getallusers",

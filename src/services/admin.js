@@ -372,3 +372,31 @@ export const deleteDailyWorkRecord = async (id) => {
     throw error;
   }
 };
+export const getWorkRecordsByDateRange = async (startDate, endDate) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/work-records-by-date-range?startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      toast.success("İş kayıtları başarıyla alındı!", { autoClose: 2000 });
+      return data.data;
+    } else {
+      toast.error(data.message || "İş kayıtları alınamadı.");
+      return null;
+    }
+  } catch (error) {
+    console.error("API isteği başarısız oldu:", error);
+    toast.error("İş kayıtları alınamadı.");
+    throw new Error("API request failed");
+  }
+};
