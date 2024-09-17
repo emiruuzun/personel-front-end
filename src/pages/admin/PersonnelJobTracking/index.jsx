@@ -64,7 +64,11 @@ function PersonnelJobTrackingPage() {
           name: record.personnel_id?.name,
           jobStartTime: record.job_start_time,
           jobEndTime: record.job_end_time,
-          overtimeHours: record.overtime_hours,
+          // Overtime saatlerini burada doğru şekilde alıyoruz
+          overtimeHours: record.overtime_hours || {
+            start_time: "",
+            end_time: "",
+          },
           company_id: record.company_id,
           recordId: record._id,
         }));
@@ -418,12 +422,12 @@ function PersonnelJobTrackingPage() {
                                   ? ` ${person.jobStartTime} - ?`
                                   : " Saat belirtilmedi"}
                               </div>
-                              {person.overtimeHours?.startTime &&
-                                person.overtimeHours?.endTime && (
+                              {person.overtimeHours?.start_time &&
+                                person.overtimeHours?.end_time && (
                                   <div className="text-sm text-gray-600">
                                     Mesai Saatleri:{" "}
-                                    {person.overtimeHours.startTime} -{" "}
-                                    {person.overtimeHours.endTime}
+                                    {person.overtimeHours.start_time} -{" "}
+                                    {person.overtimeHours.end_time}
                                   </div>
                                 )}
                             </div>
