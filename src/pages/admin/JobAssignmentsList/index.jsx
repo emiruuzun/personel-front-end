@@ -13,8 +13,7 @@ import {
 } from "react-icons/fa";
 
 function JobAssignmentsList() {
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [assignedRecords, setAssignedRecords] = useState([]);
   const [unassignedRecords, setUnassignedRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,12 +23,11 @@ function JobAssignmentsList() {
 
   const fetchWorkRecords = useCallback(async () => {
     try {
-      const formattedStartDate = startDate.toISOString().split("T")[0];
-      const formattedEndDate = endDate.toISOString().split("T")[0];
+      const formattedDate = selectedDate.toISOString().split("T")[0];
 
       const response = await getWorkRecordsByDateRange(
-        formattedStartDate,
-        formattedEndDate
+        formattedDate,
+        formattedDate
       );
 
       if (response) {
@@ -39,14 +37,14 @@ function JobAssignmentsList() {
     } catch (error) {
       console.error("İş kayıtları alınamadı:", error);
     }
-  }, [startDate, endDate]);
+  }, [selectedDate]);
 
   useEffect(() => {
     fetchWorkRecords();
   }, [fetchWorkRecords]);
 
-  const handleDateChange = () => {
-    fetchWorkRecords();
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
   };
 
   function calculateWorkingHours(startTime, endTime) {
@@ -105,46 +103,16 @@ function JobAssignmentsList() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4 flex items-center">
             <FaCalendarAlt className="mr-2 text-indigo-600" />
-            Tarih Aralığı Seçin
+            Tarih Seçin
           </h2>
-          <div className="flex flex-wrap items-end space-x-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Başlangıç Tarihi
-              </label>
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                dateFormat="dd/MM/yyyy"
-                locale="tr"
-                className="p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bitiş Tarihi
-              </label>
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                dateFormat="dd/MM/yyyy"
-                locale="tr"
-                className="p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <button
-              onClick={handleDateChange}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Kayıtları Getir
-            </button>
+          <div className="flex items-center space-x-4">
+            <DatePicker
+              selected={selectedDate}
+              onChange={handleDateChange}
+              dateFormat="dd/MM/yyyy"
+              locale="tr"
+              className="p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
           </div>
         </div>
 
