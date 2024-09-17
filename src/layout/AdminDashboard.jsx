@@ -6,10 +6,14 @@ import {
   FaBox,
   FaSignOutAlt,
   FaUserCircle,
-  FaPlusCircle,
-  FaTrashAlt,
   FaUserCog,
   FaBars,
+  FaBuilding,
+  FaClipboardList,
+  FaChartBar,
+  FaBullhorn,
+  FaCalendarCheck,
+  FaUserPlus,
 } from "react-icons/fa";
 
 function AdminDashboardLayout({ children }) {
@@ -26,14 +30,24 @@ function AdminDashboardLayout({ children }) {
 
   const getIcon = (name) => {
     switch (name) {
-      case "Profile":
+      case "Profil":
         return <FaUserCircle className="mr-2" />;
-      case "Question Add":
-        return <FaPlusCircle className="mr-2" />;
-      case "Question Delete":
-        return <FaTrashAlt className="mr-2" />;
-      case "User Settings":
+      case "Kullanıcı Kaydı":
+        return <FaUserPlus className="mr-2" />;
+      case "Firma Kaydı":
+        return <FaBuilding className="mr-2" />;
+      case "Personel İş Takibi":
+        return <FaClipboardList className="mr-2" />;
+      case "İş Atama Listesi":
+        return <FaClipboardList className="mr-2" />;
+      case "Kullanıcı Ayarları":
         return <FaUserCog className="mr-2" />;
+      case "Kullanıcı İzin Listesi":
+        return <FaCalendarCheck className="mr-2" />;
+      case "Duyuru":
+        return <FaBullhorn className="mr-2" />;
+      case "Kullanım Grafiği":
+        return <FaChartBar className="mr-2" />;
       default:
         return <FaBox className="mr-2" />;
     }
