@@ -47,37 +47,45 @@ function JobAssignmentsList() {
     setSelectedDate(date);
   };
 
-  function calculateWorkingHours(startTime, endTime) {
-    if (!startTime || !endTime) return "N/A";
-    const start = new Date(`1970-01-01T${startTime}:00`);
-    const end = new Date(`1970-01-01T${endTime}:00`);
-    const diff = (end - start) / (1000 * 60 * 60);
-    return diff.toFixed(2) + " saat";
-  }
+  function calculateTimeDifference(startTime, endTime) {
+    if (!startTime || !endTime) return "0 saat 0 dakika";
 
-  function calculateOvertimeHours(startTime, endTime) {
-    if (!startTime || !endTime) return "N/A";
     const start = new Date(`1970-01-01T${startTime}`);
     const end = new Date(`1970-01-01T${endTime}`);
-    const diff = (end - start) / (1000 * 60 * 60);
-    return diff.toFixed(2) + " saat";
+    const diffMs = end - start;
+
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    return `${diffHrs} saat ${diffMins} dakika`;
   }
 
   function calculateTotalHours(record) {
-    const workingHours = calculateWorkingHours(
+    const workingHours = calculateTimeDifference(
       record.job_start_time,
       record.job_end_time
     );
-    const overtimeHours = calculateOvertimeHours(
+    const overtimeHours = calculateTimeDifference(
       record.overtime_hours?.start_time,
       record.overtime_hours?.end_time
     );
 
-    const workingTime = workingHours === "N/A" ? 0 : parseFloat(workingHours);
-    const overtimeTime =
-      overtimeHours === "N/A" ? 0 : parseFloat(overtimeHours);
+    const [workHrs, workMins] = workingHours
+      .split(" saat ")
+      .map((v) => parseInt(v) || 0);
+    const [overtimeHrs, overtimeMins] = overtimeHours
+      .split(" saat ")
+      .map((v) => parseInt(v) || 0);
 
-    return (workingTime + overtimeTime).toFixed(2) + " saat";
+    let totalHours = workHrs + overtimeHrs;
+    let totalMinutes = workMins + overtimeMins;
+
+    if (totalMinutes >= 60) {
+      totalHours += Math.floor(totalMinutes / 60);
+      totalMinutes = totalMinutes % 60;
+    }
+
+    return `${totalHours} saat ${totalMinutes} dakika`;
   }
 
   const filteredAssignedRecords = assignedRecords.filter(
@@ -261,7 +269,7 @@ function JobAssignmentsList() {
                     </p>
                     <p className="text-md font-bold text-gray-800 mt-1">
                       Toplam:{" "}
-                      {calculateWorkingHours(
+                      {calculateTimeDifference(
                         selectedRecord.job_start_time,
                         selectedRecord.job_end_time
                       )}
@@ -280,14 +288,14 @@ function JobAssignmentsList() {
                         </p>
                         <p className="text-md font-bold text-gray-800 mt-1">
                           Toplam:{" "}
-                          {calculateOvertimeHours(
+                          {calculateTimeDifference(
                             selectedRecord.overtime_hours.start_time,
                             selectedRecord.overtime_hours.end_time
                           )}
                         </p>
                       </>
                     ) : (
-                      <p className="text-lg text-gray-500">N/A</p>
+                      <p className="text-lg text-gray-500">0 saat 0 dakika</p>
                     )}
                   </div>
                 </div>
