@@ -10,7 +10,7 @@ import {
 } from "../../../services/admin";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import tr from "date-fns/locale/tr"; // Türkçe dil desteği için
+import tr from "date-fns/locale/tr";
 
 import {
   FaUsers,
@@ -27,6 +27,7 @@ function PersonnelJobTrackingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [companies, setCompanies] = useState([]);
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
+  const [inactivePersonnel, setInactivePersonnel] = useState([]);
   const [allPersonnel, setAllPersonnel] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,17 +38,31 @@ function PersonnelJobTrackingPage() {
     useState(null);
   const [assignmentJobStartTime, setAssignmentJobStartTime] = useState("");
   const [temporaryAssignments, setTemporaryAssignments] = useState([]);
+
   registerLocale("tr", tr);
+
   const fetchAllPersonnel = async () => {
     try {
       const response = await getAllUsers();
       if (response.success) {
-        setAllPersonnel(
-          response.data.map((person) => ({
+        const activePersonnel = response.data
+          .filter((person) => person.status === "Aktif")
+          .map((person) => ({
             id: person._id,
             name: person.name,
-          }))
-        );
+          }));
+
+        const inactivePersonnel = response.data
+          .filter((person) => person.status === "İzinli")
+          .map((person) => ({
+            id: person._id,
+            name: person.name,
+            leaveStartDate: person.leaveStartDate,
+            leaveEndDate: person.leaveEndDate,
+          }));
+
+        setAllPersonnel(activePersonnel);
+        setInactivePersonnel(inactivePersonnel);
       }
     } catch (error) {
       console.error("Tüm personel alınamadı.", error);
@@ -64,7 +79,6 @@ function PersonnelJobTrackingPage() {
           name: record.personnel_id?.name,
           jobStartTime: record.job_start_time,
           jobEndTime: record.job_end_time,
-          // Overtime saatlerini burada doğru şekilde alıyoruz
           overtimeHours: record.overtime_hours || {
             start_time: "",
             end_time: "",
@@ -461,33 +475,67 @@ function PersonnelJobTrackingPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
-                <FaUserPlus className="mr-2" /> Atanabilir Personel
-              </h3>
-              <input
-                type="text"
-                placeholder="Personel Ara..."
-                className="w-full p-2 mb-4 border border-gray-300 rounded-md"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto">
-                {filteredPersonnel.map((person) => (
-                  <div
-                    key={person.id}
-                    className="flex items-center justify-between bg-gray-100 p-2 rounded"
-                  >
-                    <span>{person.name}</span>
-                    <button
-                      onClick={() => openAssignModal(person)}
-                      className="text-green-500 hover:text-green-700"
-                      title="Personeli Ata"
+            <div className="flex gap-6">
+              <div className="w-1/2 bg-white rounded-lg shadow-lg p-4">
+                <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                  <FaUserPlus className="mr-2" /> Atanabilir Personel
+                </h3>
+                <input
+                  type="text"
+                  placeholder="Personel Ara..."
+                  className="w-full p-2 mb-4 border border-gray-300 rounded-md"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto">
+                  {filteredPersonnel.map((person) => (
+                    <div
+                      key={person.id}
+                      className="flex items-center justify-between bg-gray-100 p-2 rounded"
                     >
-                      <FaUserPlus size={20} />
-                    </button>
-                  </div>
-                ))}
+                      <span>{person.name}</span>
+                      <button
+                        onClick={() => openAssignModal(person)}
+                        className="text-green-500 hover:text-green-700"
+                        title="Personeli Ata"
+                      >
+                        <FaUserPlus size={20} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="w-1/2 bg-white rounded-lg shadow-lg p-4">
+                <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                  <FaUserMinus className="mr-2" /> İzinli Personel
+                </h3>
+                <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto">
+                  {inactivePersonnel.map((person) => (
+                    <div
+                      key={person.id}
+                      className="flex flex-col bg-gray-100 p-3 rounded-lg"
+                    >
+                      <span className="font-medium text-indigo-600">
+                        {person.name}
+                      </span>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span className="block">
+                          İzin Başlangıcı:{" "}
+                          {new Date(person.leaveStartDate).toLocaleDateString(
+                            "tr-TR"
+                          )}
+                        </span>
+                        <span className="block">
+                          İzin Bitişi:{" "}
+                          {new Date(person.leaveEndDate).toLocaleDateString(
+                            "tr-TR"
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
