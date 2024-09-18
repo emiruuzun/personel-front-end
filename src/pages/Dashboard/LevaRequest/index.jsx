@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { leaveSave } from "../../../services/leave";
+import { profile } from "../../../services/profile";
 import DashboardLayout from "../../../layout/DashboardLayout";
 import {
   FaCalendarAlt,
@@ -17,20 +18,32 @@ const LeaveRequestForm = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [fullName, setFullName] = useState(""); // Adı Soyadı state
-  const [position, setPosition] = useState("");
+  const [fullName, setFullName] = useState(""); // Adı Soyadı
+  const [position, setPosition] = useState(""); // Pozisyon
   const [periodYear, setPeriodYear] = useState(new Date().getFullYear());
-  const [tcNo, setTcNo] = useState("");
+  const [tcNo, setTcNo] = useState(""); // TC No
   const [leaveDays, setLeaveDays] = useState(0);
-  const [contactNumber, setContactNumber] = useState("");
+  const [contactNumber, setContactNumber] = useState(""); // İletişim numarası
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Kullanıcı bilgisini localStorage'den al
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      setFullName(user.name); // Adı Soyadı localStorage'den al ve state'e set et
-    }
+    // Kullanıcı bilgilerini profile servisi ile çek
+    const fetchProfileData = async () => {
+      try {
+        const response = await profile();
+        if (response.success) {
+          const userData = response.data;
+          setFullName(userData.name);
+          setPosition(userData.position);
+          setTcNo(userData.tcNo);
+          setContactNumber(userData.contact);
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri alınamadı:", error);
+      }
+    };
+
+    fetchProfileData();
   }, []);
 
   useEffect(() => {
@@ -118,9 +131,8 @@ const LeaveRequestForm = () => {
               <input
                 type="text"
                 value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                required
-                className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
 
@@ -144,10 +156,8 @@ const LeaveRequestForm = () => {
               <input
                 type="text"
                 value={tcNo}
-                onChange={(e) => handleNumericInput(e, setTcNo)}
-                required
-                className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                maxLength={11}
+                disabled
+                className="p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
 
@@ -215,10 +225,8 @@ const LeaveRequestForm = () => {
               <input
                 type="tel"
                 value={contactNumber}
-                onChange={(e) => handleNumericInput(e, setContactNumber)}
-                required
-                className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                maxLength={11}
+                disabled
+                className="p-3 border rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
               />
             </div>
 

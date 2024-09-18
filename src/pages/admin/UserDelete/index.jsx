@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
-import {
-  getAllUsers,
-  deleteUserAdmin,
-  toggleBlockUser,
-} from "../../../services/admin";
+import { getAllUsers, deleteUserAdmin } from "../../../services/admin";
 import * as Dialog from "@radix-ui/react-dialog";
 
 function GetAllUsers() {
@@ -61,44 +57,6 @@ function GetAllUsers() {
     setUserToDelete(null);
   };
 
-  const handleBlock = async (userId) => {
-    try {
-      const response = await toggleBlockUser(userId);
-      if (response && response.success) {
-        setUsers((prevUsers) => {
-          return prevUsers.map((user) => {
-            if (user._id === userId) {
-              return { ...user, isBlockedByAdmin: response.Blok };
-            }
-            return user;
-          });
-        });
-      }
-      return response;
-    } catch (error) {
-      console.error(
-        `User with ID: ${userId} could not be blocked. Error:`,
-        error
-      );
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Hala Bloklanmadınız :)";
-    const options = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    const formattedDate = new Date(dateString).toLocaleString(
-      undefined,
-      options
-    );
-    return formattedDate === "Invalid Date" ? "" : formattedDate;
-  };
-
   const UserCard = ({ user }) => (
     <div className="bg-white rounded-lg shadow-md p-4 mb-4">
       <h3 className="font-semibold">{user.name}</h3>
@@ -124,12 +82,7 @@ function GetAllUsers() {
         >
           Sil
         </button>
-        <button
-          onClick={() => handleBlock(user._id)}
-          className="bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150"
-        >
-          Blokla/kaldır
-        </button>
+
         <button
           onClick={() => setSelectedUser(user)}
           className="bg-blue-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-blue-600 transition duration-150"
@@ -199,12 +152,6 @@ function GetAllUsers() {
                         Sil
                       </button>
                       <button
-                        onClick={() => handleBlock(user._id)}
-                        className="bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150"
-                      >
-                        Blokla/kaldır
-                      </button>
-                      <button
                         onClick={() => setSelectedUser(user)}
                         className="bg-blue-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-blue-600 transition duration-150"
                       >
@@ -224,27 +171,26 @@ function GetAllUsers() {
             >
               <Dialog.Overlay className="fixed inset-0 bg-black opacity-50" />
               <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 sm:w-2/3 md:w-1/2 lg:w-1/3 p-6 bg-white rounded shadow-xl">
-                <h2 className="text-lg font-semibold mb-4">User Details</h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  Kullanıcı Bilgileri
+                </h2>
                 <p>
-                  <strong>Failed Attempts:</strong>{" "}
-                  {selectedUser.failedAttempts}
+                  <strong>Durum:</strong> {selectedUser.status}
                 </p>
                 <p>
-                  <strong>Layer:</strong> {selectedUser.layer}
+                  <strong>Pozisyon:</strong> {selectedUser.position}
                 </p>
                 <p>
-                  <strong>blockedUntil:</strong>{" "}
-                  {formatDate(selectedUser.blockedUntil)}
+                  <strong>TC Kimlik No:</strong> {selectedUser.tcNo}
                 </p>
                 <p>
-                  <strong>isBlockedByAdmin:</strong>{" "}
-                  {selectedUser.isBlockedByAdmin ? "Evet" : "Hayır"}
+                  <strong>İletişim:</strong> {selectedUser.contact}
                 </p>
                 <button
                   className="mt-4 bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800"
                   onClick={() => setSelectedUser(null)}
                 >
-                  Close
+                  Kapat
                 </button>
               </Dialog.Content>
             </Dialog.Root>
