@@ -7,6 +7,7 @@ import {
   updateDailyWorkRecord,
   getDailyWorkRecords,
   deleteDailyWorkRecord,
+  getLastLeaveByUserId,
 } from "../../../services/admin";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -50,16 +51,22 @@ function PersonnelJobTrackingPage() {
           .map((person) => ({
             id: person._id,
             name: person.name,
+            position: person.position,
           }));
 
-        const inactivePersonnel = response.data
-          .filter((person) => person.status === "İzinli")
-          .map((person) => ({
-            id: person._id,
-            name: person.name,
-            leaveStartDate: person.leaveStartDate,
-            leaveEndDate: person.leaveEndDate,
-          }));
+        const inactivePersonnel = await Promise.all(
+          response.data
+            .filter((person) => person.status === "İzinli")
+            .map(async (person) => {
+              const leaveData = await getLastLeaveByUserId(person._id); // İzin verisini al
+              return {
+                id: person._id,
+                name: person.name,
+                leaveStartDate: leaveData.data?.startDate || null,
+                leaveEndDate: leaveData.data?.endDate || null,
+              };
+            })
+        );
 
         setAllPersonnel(activePersonnel);
         setInactivePersonnel(inactivePersonnel);
@@ -493,7 +500,13 @@ function PersonnelJobTrackingPage() {
                       key={person.id}
                       className="flex items-center justify-between bg-gray-100 p-2 rounded"
                     >
-                      <span>{person.name}</span>
+                      {/* İsim ve pozisyon alanlarının hizalanması */}
+                      <div className="flex-1">
+                        <span className="block font-medium">{person.name}</span>
+                        <span className="text-sm text-gray-500">
+                          {person.position}
+                        </span>
+                      </div>
                       <button
                         onClick={() => openAssignModal(person)}
                         className="text-green-500 hover:text-green-700"
@@ -505,7 +518,6 @@ function PersonnelJobTrackingPage() {
                   ))}
                 </div>
               </div>
-
               <div className="w-1/2 bg-white rounded-lg shadow-lg p-4">
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserMinus className="mr-2" /> İzinli Personel
@@ -519,20 +531,26 @@ function PersonnelJobTrackingPage() {
                       <span className="font-medium text-indigo-600">
                         {person.name}
                       </span>
-                      <div className="text-sm text-gray-600 mt-1">
-                        <span className="block">
-                          İzin Başlangıcı:{" "}
-                          {new Date(person.leaveStartDate).toLocaleDateString(
-                            "tr-TR"
-                          )}
-                        </span>
-                        <span className="block">
-                          İzin Bitişi:{" "}
-                          {new Date(person.leaveEndDate).toLocaleDateString(
-                            "tr-TR"
-                          )}
-                        </span>
-                      </div>
+                      {person.leaveStartDate && person.leaveEndDate ? (
+                        <div className="text-sm text-gray-600 mt-1">
+                          <span className="block">
+                            İzin Başlangıcı:{" "}
+                            {new Date(person.leaveStartDate).toLocaleDateString(
+                              "tr-TR"
+                            )}
+                          </span>
+                          <span className="block">
+                            İzin Bitişi:{" "}
+                            {new Date(person.leaveEndDate).toLocaleDateString(
+                              "tr-TR"
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-red-500 mt-1">
+                          İzin bilgisi bulunamadı.
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

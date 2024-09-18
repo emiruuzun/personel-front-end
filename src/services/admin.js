@@ -400,3 +400,26 @@ export const getWorkRecordsByDateRange = async (startDate, endDate) => {
     throw new Error("API request failed");
   }
 };
+export const getLastLeaveByUserId = async (userId) => {
+  try {
+    const apiRequest = await fetch(`${API_BASE_URL}/admin/leaves/last`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+      body: JSON.stringify({ userId }), // req.body ile userId gönderilir
+    });
+
+    const response = await apiRequest.json();
+
+    // Yanıtın boş olup olmadığını kontrol et
+    if (!response.success || !response.data) {
+      toast.info("Bu kullanıcıya ait herhangi bir izin talebi bulunmuyor.");
+    }
+    return response;
+  } catch (error) {
+    console.error("Kullanıcı izinlerini çekerken hata oluştu.", error);
+    throw error;
+  }
+};
