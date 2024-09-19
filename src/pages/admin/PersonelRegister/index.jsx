@@ -11,6 +11,7 @@ function PersonelRegister() {
   const [position, setPosition] = useState("");
   const [contact, setContact] = useState("");
   const [status, setStatus] = useState("Aktif"); // Varsayılan olarak 'Aktif' ayarladık
+  const [group, setGroup] = useState(""); // Group için state
 
   // Form gönderim fonksiyonu
   const handleSubmit = async (e) => {
@@ -23,6 +24,7 @@ function PersonelRegister() {
       position,
       contact,
       status,
+      group, // Group'u ekledik
     };
 
     try {
@@ -35,6 +37,7 @@ function PersonelRegister() {
         setPosition("");
         setContact("");
         setStatus("Aktif"); // Varsayılan olarak 'Aktif' ayarladık
+        setGroup(""); // Group alanını sıfırla
       }
     } catch (error) {
       console.error("Kayıt hatası:", error);
@@ -132,6 +135,28 @@ function PersonelRegister() {
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Grup
+            </label>
+            <select
+              name="group"
+              value={group}
+              onChange={(e) => setGroup(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            >
+              <option value="" disabled>
+                Grup Seçin
+              </option>
+              <option value="Mekanik">Mekanik</option>
+              <option value="Boru">Boru</option>
+              <option value="Elektrik">Elektrik</option>
+              <option value="Aksaray">Aksaray</option>
+              <option value="Kapı">Kapı</option>
+              <option value="Kapı">Ofis</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Durum
             </label>
             <select
@@ -145,6 +170,7 @@ function PersonelRegister() {
               <option value="Pasif">Pasif</option>
             </select>
           </div>
+
           <button
             type="submit"
             className="w-full py-2 px-4 bg-blue-600 text-white font-bold rounded-lg"

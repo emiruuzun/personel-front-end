@@ -52,6 +52,7 @@ function PersonnelJobTrackingPage() {
             id: person._id,
             name: person.name,
             position: person.position,
+            group: person.group,
           }));
 
         const inactivePersonnel = await Promise.all(
@@ -504,7 +505,7 @@ function PersonnelJobTrackingPage() {
                       <div className="flex-1">
                         <span className="block font-medium">{person.name}</span>
                         <span className="text-sm text-gray-500">
-                          {person.position}
+                          {person.group} Grubu
                         </span>
                       </div>
                       <button
