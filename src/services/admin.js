@@ -423,3 +423,19 @@ export const getLastLeaveByUserId = async (userId) => {
     throw error;
   }
 };
+export const deleteCompany = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/company/delete/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    throw error;
+  }
+};
