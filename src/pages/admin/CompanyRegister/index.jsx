@@ -5,8 +5,10 @@ import {
   getAllCompanies,
   deleteCompany,
   addJobToCompany,
+  getJobsByCompanyId,
 } from "../../../services/admin";
 import { toast } from "react-toastify";
+import { Trash2, BriefcaseIcon, Eye } from "lucide-react";
 
 function CompanyRegisterPage() {
   const [activeTab, setActiveTab] = useState("register");
@@ -24,6 +26,10 @@ function CompanyRegisterPage() {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+
+  // İşleri Görüntüleme Modalı state'leri
+  const [isViewJobsModalOpen, setIsViewJobsModalOpen] = useState(false);
+  const [companyJobs, setCompanyJobs] = useState([]);
 
   const handleChange = (e) =>
     setCompany({ ...company, [e.target.name]: e.target.value });
@@ -84,6 +90,7 @@ function CompanyRegisterPage() {
     setJobDescription("");
     setSelectedCompanyId(null);
   };
+
   const handleAddJob = async () => {
     if (!jobTitle || !jobDescription || !selectedCompanyId) {
       toast.error("Lütfen tüm iş bilgilerini girin.");
@@ -91,7 +98,7 @@ function CompanyRegisterPage() {
     }
 
     const jobData = {
-      jobName: jobTitle, // Burada `jobName` olarak değiştirildi
+      jobName: jobTitle,
       jobDescription: jobDescription,
     };
 
@@ -108,6 +115,26 @@ function CompanyRegisterPage() {
       console.error("İş ekleme hatası:", error);
       toast.error("İş eklenirken bir hata oluştu.");
     }
+  };
+
+  const openViewJobsModal = async (companyId) => {
+    try {
+      const response = await getJobsByCompanyId(companyId);
+      if (response.success) {
+        setCompanyJobs(response.data); // response.jobs yerine response.data kullanıyoruz
+        setIsViewJobsModalOpen(true);
+      } else {
+        toast.error("İşler getirilirken bir hata oluştu.");
+      }
+    } catch (error) {
+      console.error("İşler getirilirken hata oluştu:", error);
+      toast.error("İşler getirilirken bir hata oluştu.");
+    }
+  };
+
+  const closeViewJobsModal = () => {
+    setIsViewJobsModalOpen(false);
+    setCompanyJobs([]);
   };
 
   useEffect(() => {
@@ -234,19 +261,30 @@ function CompanyRegisterPage() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               {company.contact}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap flex space-x-4">
-                              <button
-                                onClick={() => handleDelete(company._id)}
-                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors duration-200"
-                              >
-                                Sil
-                              </button>
-                              <button
-                                onClick={() => openJobModal(company._id)}
-                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors duration-200"
-                              >
-                                İş Ekle
-                              </button>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleDelete(company._id)}
+                                  className="p-1 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                                  title="Sil"
+                                >
+                                  <Trash2 size={20} />
+                                </button>
+                                <button
+                                  onClick={() => openJobModal(company._id)}
+                                  className="p-1 text-blue-600 hover:bg-blue-100 rounded-full transition-colors duration-200"
+                                  title="İş Ekle"
+                                >
+                                  <BriefcaseIcon size={20} />
+                                </button>
+                                <button
+                                  onClick={() => openViewJobsModal(company._id)}
+                                  className="p-1 text-green-600 hover:bg-green-100 rounded-full transition-colors duration-200"
+                                  title="İşleri Görüntüle"
+                                >
+                                  <Eye size={20} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -301,6 +339,39 @@ function CompanyRegisterPage() {
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
               >
                 İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* İşleri Görüntüleme Modalı */}
+      {isViewJobsModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-xl font-bold mb-4">Firmanın İşleri</h3>
+            {companyJobs && companyJobs.length > 0 ? (
+              <ul className="space-y-2">
+                {companyJobs.map((job) => (
+                  <li key={job._id} className="p-2 bg-gray-100 rounded">
+                    <p className="font-semibold">{job.jobName}</p>
+                    <p className="text-sm text-gray-600">
+                      {job.jobDescription}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600">
+                Bu firmaya ait iş bulunmamaktadır.
+              </p>
+            )}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={closeViewJobsModal}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Kapat
               </button>
             </div>
           </div>
