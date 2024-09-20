@@ -32,6 +32,7 @@ function PersonnelJobTrackingPage() {
   const [allPersonnel, setAllPersonnel] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("Tümü"); // Seçilen grubu izleyen state
   const [editingPerson, setEditingPerson] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -39,6 +40,16 @@ function PersonnelJobTrackingPage() {
     useState(null);
   const [assignmentJobStartTime, setAssignmentJobStartTime] = useState("");
   const [temporaryAssignments, setTemporaryAssignments] = useState([]);
+
+  const groups = [
+    "Tümü",
+    "Mekanik",
+    "Boru",
+    "Elektrik",
+    "Aksaray",
+    "Kapı",
+    "Ofis",
+  ];
 
   registerLocale("tr", tr);
 
@@ -366,9 +377,13 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const filteredPersonnel = unassignedPersonnel.filter((person) =>
-    person.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPersonnel = unassignedPersonnel
+    .filter(
+      (person) => selectedGroup === "Tümü" || person.group === selectedGroup
+    )
+    .filter((person) =>
+      person.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   return (
     <AdminDashboardlayout>
@@ -488,6 +503,17 @@ function PersonnelJobTrackingPage() {
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserPlus className="mr-2" /> Atanabilir Personel
                 </h3>
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="w-full mb-4 p-2 border border-gray-300 rounded-md"
+                >
+                  {groups.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   placeholder="Personel Ara..."
@@ -501,7 +527,6 @@ function PersonnelJobTrackingPage() {
                       key={person.id}
                       className="flex items-center justify-between bg-gray-100 p-2 rounded"
                     >
-                      {/* İsim ve pozisyon alanlarının hizalanması */}
                       <div className="flex-1">
                         <span className="block font-medium">{person.name}</span>
                         <span className="text-sm text-gray-500">
