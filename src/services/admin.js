@@ -439,3 +439,23 @@ export const deleteCompany = async (id) => {
     throw error;
   }
 };
+export const addJobToCompany = async (companyId, jobData) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/company/${companyId}/jobs`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+        body: JSON.stringify(jobData),
+      }
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error adding job to company:", error);
+    throw error;
+  }
+};

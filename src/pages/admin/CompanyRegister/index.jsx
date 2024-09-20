@@ -4,6 +4,7 @@ import {
   companyRegister,
   getAllCompanies,
   deleteCompany,
+  addJobToCompany,
 } from "../../../services/admin";
 import { toast } from "react-toastify";
 
@@ -17,6 +18,12 @@ function CompanyRegisterPage() {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal state'leri
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
 
   const handleChange = (e) =>
     setCompany({ ...company, [e.target.name]: e.target.value });
@@ -63,6 +70,43 @@ function CompanyRegisterPage() {
     } catch (error) {
       console.error("Silme hatası:", error);
       toast.error("Şirket silinirken bir hata oluştu.");
+    }
+  };
+
+  const openJobModal = (companyId) => {
+    setSelectedCompanyId(companyId);
+    setIsJobModalOpen(true);
+  };
+
+  const closeJobModal = () => {
+    setIsJobModalOpen(false);
+    setJobTitle("");
+    setJobDescription("");
+    setSelectedCompanyId(null);
+  };
+  const handleAddJob = async () => {
+    if (!jobTitle || !jobDescription || !selectedCompanyId) {
+      toast.error("Lütfen tüm iş bilgilerini girin.");
+      return;
+    }
+
+    const jobData = {
+      jobName: jobTitle, // Burada `jobName` olarak değiştirildi
+      jobDescription: jobDescription,
+    };
+
+    try {
+      const response = await addJobToCompany(selectedCompanyId, jobData);
+      if (response.success) {
+        toast.success("İş başarıyla eklendi!");
+        closeJobModal();
+        fetchCompanies();
+      } else {
+        toast.error("İş eklenirken bir hata oluştu.");
+      }
+    } catch (error) {
+      console.error("İş ekleme hatası:", error);
+      toast.error("İş eklenirken bir hata oluştu.");
     }
   };
 
@@ -190,12 +234,18 @@ function CompanyRegisterPage() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               {company.contact}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap flex space-x-4">
                               <button
                                 onClick={() => handleDelete(company._id)}
                                 className="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition-colors duration-200"
                               >
                                 Sil
+                              </button>
+                              <button
+                                onClick={() => openJobModal(company._id)}
+                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors duration-200"
+                              >
+                                İş Ekle
                               </button>
                             </td>
                           </tr>
@@ -209,6 +259,53 @@ function CompanyRegisterPage() {
           </div>
         </div>
       </div>
+
+      {/* İş Ekleme Modalı */}
+      {isJobModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-xl font-bold mb-4">İş Ekle</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  İş Başlığı
+                </label>
+                <input
+                  type="text"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="İş Adı"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  İş Açıklaması
+                </label>
+                <textarea
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  className="w-full p-2 border rounded"
+                ></textarea>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={handleAddJob}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Ekle
+              </button>
+              <button
+                onClick={closeJobModal}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminDashboardlayout>
   );
 }
