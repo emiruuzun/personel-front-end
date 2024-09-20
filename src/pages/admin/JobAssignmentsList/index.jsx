@@ -261,6 +261,56 @@ function JobAssignmentsList() {
                   </div>
                   <div className="mb-4">
                     <p className="text-sm font-semibold text-gray-700 mb-1">
+                      İş:
+                    </p>
+                    <p className="text-lg text-indigo-600">
+                      {selectedRecord.company_id?.jobs.find(
+                        (job) => job._id === selectedRecord.job_id
+                      )?.jobName || "Belirtilmedi"}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      Çalışma Saatleri:
+                    </p>
+                    <p className="text-lg text-indigo-600">
+                      {selectedRecord.job_start_time} -{" "}
+                      {selectedRecord.job_end_time}
+                    </p>
+                    <p className="text-md font-bold text-gray-800 mt-1">
+                      Toplam:{" "}
+                      {calculateTimeDifference(
+                        selectedRecord.job_start_time,
+                        selectedRecord.job_end_time
+                      )}
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
+                      Mesai Saatleri:
+                    </p>
+                    {selectedRecord.overtime_hours?.start_time &&
+                    selectedRecord.overtime_hours?.end_time ? (
+                      <>
+                        <p className="text-lg text-indigo-600">
+                          {selectedRecord.overtime_hours.start_time} -{" "}
+                          {selectedRecord.overtime_hours.end_time}
+                        </p>
+                        <p className="text-md font-bold text-gray-800 mt-1">
+                          Toplam:{" "}
+                          {calculateTimeDifference(
+                            selectedRecord.overtime_hours.start_time,
+                            selectedRecord.overtime_hours.end_time
+                          )}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-lg text-gray-500">0 saat 0 dakika</p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-1">
                       Çalışma Saatleri:
                     </p>
                     <p className="text-lg text-indigo-600">
