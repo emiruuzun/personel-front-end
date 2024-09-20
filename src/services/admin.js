@@ -459,3 +459,23 @@ export const addJobToCompany = async (companyId, jobData) => {
     throw error;
   }
 };
+
+export const getJobsByCompanyId = async (companyId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/company/${companyId}/jobsAd`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+      }
+    );
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    throw error;
+  }
+};

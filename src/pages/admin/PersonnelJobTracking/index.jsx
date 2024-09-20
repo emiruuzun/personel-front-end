@@ -8,6 +8,7 @@ import {
   getDailyWorkRecords,
   deleteDailyWorkRecord,
   getLastLeaveByUserId,
+  getJobsByCompanyId, // Jobs API
 } from "../../../services/admin";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -27,10 +28,12 @@ import {
 function PersonnelJobTrackingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [companies, setCompanies] = useState([]);
+  const [jobs, setJobs] = useState([]); // Jobs list state
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
   const [inactivePersonnel, setInactivePersonnel] = useState([]);
   const [allPersonnel, setAllPersonnel] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(""); // Selected job state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("Tümü"); // Seçilen grubu izleyen state
   const [editingPerson, setEditingPerson] = useState(null);
@@ -146,10 +149,29 @@ function PersonnelJobTrackingPage() {
     }
   };
 
+  const fetchJobs = async (companyId) => {
+    try {
+      const response = await getJobsByCompanyId(companyId);
+      if (response.success) {
+        setJobs(response.data);
+      } else {
+        console.error("İşler alınamadı.");
+      }
+    } catch (error) {
+      console.error("İşler alınırken hata oluştu:", error);
+    }
+  };
+
   useEffect(() => {
     fetchCompanies();
     fetchAllPersonnel();
   }, []);
+
+  useEffect(() => {
+    if (activeCompany) {
+      fetchJobs(activeCompany); // Şirket seçildiğinde iş listesi alınıyor
+    }
+  }, [activeCompany]);
 
   useEffect(() => {
     if (allPersonnel.length > 0) {
@@ -166,14 +188,20 @@ function PersonnelJobTrackingPage() {
   const closeAssignModal = () => {
     setSelectedPersonnelForAssignment(null);
     setAssignmentJobStartTime("");
+    setSelectedJob(""); // İş seçimini sıfırlama
     setShowAssignModal(false);
   };
 
   const handleConfirmAssignPersonnel = () => {
-    if (selectedPersonnelForAssignment && assignmentJobStartTime) {
+    if (
+      selectedPersonnelForAssignment &&
+      assignmentJobStartTime &&
+      selectedJob
+    ) {
       const newAssignment = {
         personnel_id: selectedPersonnelForAssignment.id,
         company_id: activeCompany,
+        job_id: selectedJob, // Seçilen iş ID'sini ekleyin
         date: selectedDate.toISOString().split("T")[0],
         job_start_time: assignmentJobStartTime,
       };
@@ -195,6 +223,7 @@ function PersonnelJobTrackingPage() {
                     jobStartTime: assignmentJobStartTime,
                     jobEndTime: "",
                     overtimeHours: { startTime: "", endTime: "" },
+                    jobId: selectedJob, // İş ID'sini ekleyin
                   },
                 ],
               }
@@ -208,7 +237,7 @@ function PersonnelJobTrackingPage() {
 
       closeAssignModal();
     } else {
-      alert("Lütfen iş başlangıç saatini giriniz.");
+      alert("Lütfen iş başlangıç saatini ve işi seçiniz.");
     }
   };
 
@@ -610,6 +639,25 @@ function PersonnelJobTrackingPage() {
               </button>
             </div>
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  İş Seçin
+                </label>
+                <select
+                  value={selectedJob}
+                  onChange={(e) => setSelectedJob(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="" disabled>
+                    İş Seçin
+                  </option>
+                  {jobs.map((job) => (
+                    <option key={job._id} value={job._id}>
+                      {job.jobName}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   İş Başlangıç Saati
