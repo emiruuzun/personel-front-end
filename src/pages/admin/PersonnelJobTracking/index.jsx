@@ -153,7 +153,10 @@ function PersonnelJobTrackingPage() {
     try {
       const response = await getJobsByCompanyId(companyId);
       if (response.success) {
-        setJobs(response.data);
+        const activeJobs = response.data.filter(
+          (job) => job.status === "active"
+        );
+        setJobs(activeJobs);
       } else {
         console.error("İşler alınamadı.");
       }

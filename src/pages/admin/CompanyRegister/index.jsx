@@ -6,9 +6,10 @@ import {
   deleteCompany,
   addJobToCompany,
   getJobsByCompanyId,
+  completeJob,
 } from "../../../services/admin";
 import { toast } from "react-toastify";
-import { Trash2, BriefcaseIcon, Eye } from "lucide-react";
+import { Trash2, BriefcaseIcon, Eye, CheckSquare, Square } from "lucide-react";
 
 function CompanyRegisterPage() {
   const [activeTab, setActiveTab] = useState("register");
@@ -26,6 +27,7 @@ function CompanyRegisterPage() {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [complate, setComplate] = useState(null);
 
   // İşleri Görüntüleme Modalı state'leri
   const [isViewJobsModalOpen, setIsViewJobsModalOpen] = useState(false);
@@ -123,8 +125,7 @@ function CompanyRegisterPage() {
       if (response.success) {
         setCompanyJobs(response.data); // response.jobs yerine response.data kullanıyoruz
         setIsViewJobsModalOpen(true);
-      } else {
-        toast.error("İşler getirilirken bir hata oluştu.");
+        setComplate(companyId);
       }
     } catch (error) {
       console.error("İşler getirilirken hata oluştu:", error);
@@ -135,6 +136,14 @@ function CompanyRegisterPage() {
   const closeViewJobsModal = () => {
     setIsViewJobsModalOpen(false);
     setCompanyJobs([]);
+  };
+  const handleCompleteJob = async (companyId, jobId) => {
+    try {
+      await completeJob(companyId, jobId);
+      openViewJobsModal(companyId);
+    } catch (error) {
+      console.error("İş tamamlanırken hata oluştu:", error);
+    }
   };
 
   useEffect(() => {
@@ -353,11 +362,34 @@ function CompanyRegisterPage() {
             {companyJobs && companyJobs.length > 0 ? (
               <ul className="space-y-2">
                 {companyJobs.map((job) => (
-                  <li key={job._id} className="p-2 bg-gray-100 rounded">
-                    <p className="font-semibold">{job.jobName}</p>
-                    <p className="text-sm text-gray-600">
-                      {job.jobDescription}
-                    </p>
+                  <li
+                    key={job._id}
+                    className="p-2 bg-gray-100 rounded flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-semibold">{job.jobName}</p>
+                      <p className="text-sm text-gray-600">
+                        {job.jobDescription}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleCompleteJob(complate, job._id)}
+                      className={`p-2 rounded-full transition-colors duration-200 ${
+                        job.status === "completed"
+                          ? "text-green-600 cursor-not-allowed"
+                          : "text-gray-600 hover:text-green-600"
+                      }`}
+                      title={
+                        job.status === "completed" ? "Tamamlandı" : "Tamamla"
+                      }
+                      disabled={job.status === "completed"}
+                    >
+                      {job.status === "completed" ? (
+                        <CheckSquare size={24} />
+                      ) : (
+                        <Square size={24} />
+                      )}
+                    </button>
                   </li>
                 ))}
               </ul>

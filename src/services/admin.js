@@ -479,3 +479,31 @@ export const getJobsByCompanyId = async (companyId) => {
     throw error;
   }
 };
+
+export const completeJob = async (companyId, jobId) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/company/${companyId}/${jobId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+    console.log(data);
+
+    if (data && data.success) {
+      toast.success("İş başarıyla tamamlandı!");
+      // İşi tamamlananlar arasında işaretlemek veya durumu güncellemek için gerekli işlemler
+    } else {
+      toast.error("İşi tamamlama sırasında bir hata oluştu.");
+    }
+  } catch (error) {
+    console.error("İş tamamlama sırasında hata:", error);
+    toast.error("İşi tamamlama sırasında bir hata oluştu.");
+  }
+};
