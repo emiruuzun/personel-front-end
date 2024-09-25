@@ -61,7 +61,11 @@ function PersonnelJobTrackingPage() {
       const response = await getAllUsers();
       if (response.success) {
         const activePersonnel = response.data
-          .filter((person) => person.status === "Aktif")
+          .filter(
+            (person) =>
+              person.status === "Aktif" ||
+              person.status === "Onaylanmış (Yaklaşan)"
+          )
           .map((person) => ({
             id: person._id,
             name: person.name,
