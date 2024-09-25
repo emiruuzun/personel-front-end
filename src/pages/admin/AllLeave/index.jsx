@@ -14,8 +14,7 @@ const AdminLeaveRequests = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("Hepsi");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("Güncel");
 
   useEffect(() => {
     const fetchLeaveRequests = async () => {
@@ -77,12 +76,16 @@ const AdminLeaveRequests = () => {
   };
 
   const filteredRequests = leaveRequests.filter((leave) => {
-    const matchesStatus =
-      filterStatus === "Hepsi" || leave.status === filterStatus;
-    const matchesSearch = leave.fullName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+    if (activeTab === "Güncel") {
+      return leave.status === "Beklemede";
+    }
+    if (activeTab === "Onaylanan") {
+      return leave.status === "Onaylandı";
+    }
+    if (activeTab === "Reddedilen") {
+      return leave.status === "Reddedildi";
+    }
+    return true;
   });
 
   const LeaveRequestCard = ({ request }) => (
@@ -143,51 +146,45 @@ const AdminLeaveRequests = () => {
           İzin Talepleri Listesi
         </h1>
 
-        {/* Filtreleme ve Arama Alanları */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0">
-          <div className="w-full sm:w-auto mb-2 sm:mb-0">
-            <label
-              htmlFor="statusFilter"
-              className="block sm:inline-block mr-2 font-semibold mb-1 sm:mb-0"
-            >
-              Duruma Göre Filtrele:
-            </label>
-            <select
-              id="statusFilter"
-              className="w-full sm:w-auto border rounded px-3 py-1"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="Hepsi">Hepsi</option>
-              <option value="Onaylandı">Onaylandı</option>
-              <option value="Reddedildi">Reddedildi</option>
-              <option value="Beklemede">Beklemede</option>
-            </select>
-          </div>
-          <div className="w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Ada göre ara..."
-              className="w-full sm:w-auto border rounded px-3 py-1"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        {/* Sekmeler */}
+        <div className="mb-4">
+          <button
+            className={`py-2 px-4 mr-2 ${
+              activeTab === "Güncel" ? "bg-blue-500 text-white" : "bg-gray-200"
+            } rounded-lg`}
+            onClick={() => setActiveTab("Güncel")}
+          >
+            Güncel Talepler
+          </button>
+          <button
+            className={`py-2 px-4 mr-2 ${
+              activeTab === "Onaylanan"
+                ? "bg-green-500 text-white"
+                : "bg-gray-200"
+            } rounded-lg`}
+            onClick={() => setActiveTab("Onaylanan")}
+          >
+            Onaylanan Talepler
+          </button>
+          <button
+            className={`py-2 px-4 ${
+              activeTab === "Reddedilen"
+                ? "bg-red-500 text-white"
+                : "bg-gray-200"
+            } rounded-lg`}
+            onClick={() => setActiveTab("Reddedilen")}
+          >
+            Reddedilen Talepler
+          </button>
         </div>
 
         {loading ? (
           <div className="flex justify-center items-center min-h-screen">
             <p className="text-xl font-semibold text-gray-700">Yükleniyor...</p>
           </div>
-        ) : leaveRequests.length === 0 ? (
-          <div className="flex justify-center items-center min-h-screen">
-            <p className="text-xl font-semibold text-gray-700">
-              Henüz bir izin talebi yok.
-            </p>
-          </div>
         ) : filteredRequests.length === 0 ? (
           <div className="text-center text-gray-500">
-            Seçilen kritere göre izin talebi bulunamadı.
+            Seçilen kategoride izin talebi bulunamadı.
           </div>
         ) : (
           <>
@@ -356,7 +353,6 @@ const AdminLeaveRequests = () => {
                   label="İzin Günleri"
                   value={selectedLeaveDetails.leaveDays}
                 />
-
                 <DetailItem
                   label="İletişim Numarası"
                   value={selectedLeaveDetails.contactNumber}
