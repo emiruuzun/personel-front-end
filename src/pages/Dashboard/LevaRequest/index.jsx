@@ -50,7 +50,7 @@ const LeaveRequestForm = () => {
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // Başlangıç ve bitiş günlerini dahil eder
+      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)); // Başlangıç ve bitiş günlerini dahil eder
       setLeaveDays(days > 0 ? days : 0); // Negatif sonuçları engellemek için kontrol
     }
   }, [startDate, endDate]);
@@ -103,6 +103,16 @@ const LeaveRequestForm = () => {
       setter(value);
     }
   };
+
+  // Bugünün tarihini YYYY-MM-DD formatında alın
+  const today = new Date().toISOString().split("T")[0];
+
+  // Start Date + 1 day
+  const minEndDate = startDate
+    ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0]
+    : today;
 
   return (
     <DashboardLayout>
@@ -187,6 +197,7 @@ const LeaveRequestForm = () => {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
+                  min={today} // Bugünden önceki tarih seçilemez
                   className="pl-10 p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -201,6 +212,7 @@ const LeaveRequestForm = () => {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
+                  min={minEndDate} // Başlangıç tarihinden bir gün sonrası en erken tarih olarak ayarlandı
                   className="pl-10 p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
