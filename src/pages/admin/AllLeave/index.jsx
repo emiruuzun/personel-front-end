@@ -85,6 +85,9 @@ const AdminLeaveRequests = () => {
     if (activeTab === "Reddedilen") {
       return leave.status === "Reddedildi";
     }
+    if (activeTab === "Geçmiş") {
+      return leave.status === "Geçmiş İzin";
+    }
     return true;
   });
 
@@ -105,11 +108,14 @@ const AdminLeaveRequests = () => {
               ? "bg-green-200 text-green-700"
               : request.status === "Reddedildi"
               ? "bg-red-200 text-red-700"
+              : request.status === "Geçmiş İzin"
+              ? "bg-purple-200 text-purple-700"
               : "bg-yellow-200 text-yellow-800"
           }`}
         >
           {request.status}
         </span>
+
         <div className="space-x-2">
           <button
             onClick={() => setSelectedLeaveDetails(request)}
@@ -167,7 +173,7 @@ const AdminLeaveRequests = () => {
             Onaylanan Talepler
           </button>
           <button
-            className={`py-2 px-4 ${
+            className={`py-2 px-4 mr-2 ${
               activeTab === "Reddedilen"
                 ? "bg-red-500 text-white"
                 : "bg-gray-200"
@@ -175,6 +181,16 @@ const AdminLeaveRequests = () => {
             onClick={() => setActiveTab("Reddedilen")}
           >
             Reddedilen Talepler
+          </button>
+          <button
+            className={`py-2 px-4 ${
+              activeTab === "Geçmiş"
+                ? "bg-purple-500 text-white"
+                : "bg-gray-200"
+            } rounded-lg`}
+            onClick={() => setActiveTab("Geçmiş")}
+          >
+            Geçmiş İzinler
           </button>
         </div>
 
@@ -248,13 +264,15 @@ const AdminLeaveRequests = () => {
                           }}
                           className={`bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150 ${
                             request.status === "Onaylandı" ||
-                            request.status === "Reddedildi"
+                            request.status === "Reddedildi" ||
+                            request.status === "Geçmiş İzin"
                               ? "opacity-50 cursor-not-allowed"
                               : ""
                           }`}
                           disabled={
                             request.status === "Onaylandı" ||
-                            request.status === "Reddedildi"
+                            request.status === "Reddedildi" ||
+                            request.status === "Geçmiş İzin"
                           }
                         >
                           Durum Güncelle
