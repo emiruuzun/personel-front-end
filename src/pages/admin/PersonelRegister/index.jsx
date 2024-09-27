@@ -152,7 +152,7 @@ function PersonelRegister() {
               <option value="Elektrik">Elektrik</option>
               <option value="Aksaray">Aksaray</option>
               <option value="Kapı">Kapı</option>
-              <option value="Kapı">Ofis</option>
+              <option value="Ofis">Ofis</option>
             </select>
           </div>
           <div className="mb-4">
