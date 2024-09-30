@@ -8,7 +8,7 @@ import {
   getDailyWorkRecords,
   deleteDailyWorkRecord,
   getLastLeaveByUserId,
-  getJobsByCompanyId, // Jobs API
+  getJobsByCompanyId,
 } from "../../../services/admin";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -28,14 +28,14 @@ import {
 function PersonnelJobTrackingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [companies, setCompanies] = useState([]);
-  const [jobs, setJobs] = useState([]); // Jobs list state
+  const [jobs, setJobs] = useState([]);
   const [unassignedPersonnel, setUnassignedPersonnel] = useState([]);
   const [inactivePersonnel, setInactivePersonnel] = useState([]);
-  const [allPersonnel, setAllPersonnel] = useState([]);
+  const [allPersonnelWithLeave, setAllPersonnelWithLeave] = useState([]);
   const [activeCompany, setActiveCompany] = useState(null);
-  const [selectedJob, setSelectedJob] = useState(""); // Selected job state
+  const [selectedJob, setSelectedJob] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("Tümü"); // Seçilen grubu izleyen state
+  const [selectedGroup, setSelectedGroup] = useState("Tümü");
   const [editingPerson, setEditingPerson] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -56,39 +56,25 @@ function PersonnelJobTrackingPage() {
 
   registerLocale("tr", tr);
 
-  const fetchAllPersonnel = async () => {
+  const fetchAllPersonnelWithLeave = async () => {
     try {
       const response = await getAllUsers();
       if (response.success) {
-        const activePersonnel = response.data
-          .filter(
-            (person) =>
-              person.status === "Aktif" ||
-              person.status === "Onaylanmış (Yaklaşan)"
-          )
-          .map((person) => ({
-            id: person._id,
-            name: person.name,
-            position: person.position,
-            group: person.group,
-          }));
-
-        const inactivePersonnel = await Promise.all(
-          response.data
-            .filter((person) => person.status === "İzinli")
-            .map(async (person) => {
-              const leaveData = await getLastLeaveByUserId(person._id); // İzin verisini al
-              return {
-                id: person._id,
-                name: person.name,
-                leaveStartDate: leaveData.data?.startDate || null,
-                leaveEndDate: leaveData.data?.endDate || null,
-              };
-            })
+        const personnelWithLeave = await Promise.all(
+          response.data.map(async (person) => {
+            const leaveData = await getLastLeaveByUserId(person._id);
+            return {
+              id: person._id,
+              name: person.name,
+              position: person.position,
+              group: person.group,
+              status: person.status,
+              leaveStartDate: leaveData.data?.startDate || null,
+              leaveEndDate: leaveData.data?.endDate || null,
+            };
+          })
         );
-
-        setAllPersonnel(activePersonnel);
-        setInactivePersonnel(inactivePersonnel);
+        setAllPersonnelWithLeave(personnelWithLeave);
       }
     } catch (error) {
       console.error("Tüm personel alınamadı.", error);
@@ -114,10 +100,23 @@ function PersonnelJobTrackingPage() {
         }));
 
         const assignedPersonnelIds = assignedPersonnel.map((p) => p.id);
-        const unassignedPersonnelData = allPersonnel.filter(
-          (person) => !assignedPersonnelIds.includes(person.id)
-        );
+        const unassignedPersonnelData = allPersonnelWithLeave.filter(
+          (person) => {
+            // Atanmış mı diye kontrol ediyoruz
+            const isAssigned = assignedPersonnelIds.includes(person.id);
 
+            // İzinli mi kontrol edelim
+            const isOnLeave =
+              person.status === "İzinli" &&
+              person.leaveStartDate &&
+              person.leaveEndDate &&
+              new Date(person.leaveStartDate) <= new Date(selectedDate) &&
+              new Date(person.leaveEndDate) >= new Date(selectedDate);
+
+            // Eğer atanmış değilse ve izinli değilse, atanabilir personel listesine ekleyelim
+            return !isAssigned && !isOnLeave;
+          }
+        );
         setUnassignedPersonnel(unassignedPersonnelData);
 
         setCompanies((prevCompanies) =>
@@ -132,7 +131,7 @@ function PersonnelJobTrackingPage() {
     } catch (error) {
       console.error("Günlük iş kayıtları alınamadı.", error);
     }
-  }, [allPersonnel, selectedDate]);
+  }, [allPersonnelWithLeave, selectedDate]);
 
   const fetchCompanies = async () => {
     try {
@@ -171,20 +170,62 @@ function PersonnelJobTrackingPage() {
 
   useEffect(() => {
     fetchCompanies();
-    fetchAllPersonnel();
+    fetchAllPersonnelWithLeave();
   }, []);
 
   useEffect(() => {
     if (activeCompany) {
-      fetchJobs(activeCompany); // Şirket seçildiğinde iş listesi alınıyor
+      fetchJobs(activeCompany);
     }
   }, [activeCompany]);
 
   useEffect(() => {
-    if (allPersonnel.length > 0) {
+    if (allPersonnelWithLeave.length > 0) {
       fetchDailyWorkRecords();
     }
-  }, [fetchDailyWorkRecords, allPersonnel, selectedDate]);
+  }, [fetchDailyWorkRecords, allPersonnelWithLeave, selectedDate]);
+  useEffect(() => {
+    const filterPersonnel = () => {
+      const assignablePersonnel = allPersonnelWithLeave.filter((person) => {
+        const isActive =
+          person.status === "Aktif" ||
+          person.status === "Onaylanmış (Yaklaşan)";
+
+        const isNotOnLeave =
+          !person.leaveStartDate || // Eğer izin başlangıç tarihi yoksa atanabilir
+          new Date(selectedDate) > new Date(person.leaveEndDate); // Seçilen tarih, izin bitiş tarihinden sonraysa atanabilir
+
+        console.log(
+          "Person:",
+          person.name,
+          "isActive:",
+          isActive,
+          "isNotOnLeave:",
+          isNotOnLeave
+        );
+
+        // Hem aktif hem de izni bitmiş olmalı ki atanabilir listeye ekleyelim
+        return isActive && isNotOnLeave;
+      });
+
+      const inactivePersonnel = allPersonnelWithLeave.filter((person) => {
+        const isOnLeave =
+          person.status === "İzinli" &&
+          person.leaveStartDate &&
+          person.leaveEndDate &&
+          new Date(person.leaveStartDate) <= selectedDate &&
+          new Date(person.leaveEndDate) >= selectedDate;
+
+        return isOnLeave;
+      });
+
+      // Atanabilir ve izinli personel listelerini güncelle
+      setUnassignedPersonnel(assignablePersonnel);
+      setInactivePersonnel(inactivePersonnel);
+    };
+
+    filterPersonnel(); // Filtreleme işlemini her yeni veri geldiğinde tetikle
+  }, [selectedDate, allPersonnelWithLeave]);
 
   const openAssignModal = (person) => {
     setSelectedPersonnelForAssignment(person);
@@ -195,7 +236,7 @@ function PersonnelJobTrackingPage() {
   const closeAssignModal = () => {
     setSelectedPersonnelForAssignment(null);
     setAssignmentJobStartTime("");
-    setSelectedJob(""); // İş seçimini sıfırlama
+    setSelectedJob("");
     setShowAssignModal(false);
   };
 
@@ -208,7 +249,7 @@ function PersonnelJobTrackingPage() {
       const newAssignment = {
         personnel_id: selectedPersonnelForAssignment.id,
         company_id: activeCompany,
-        job_id: selectedJob, // Seçilen iş ID'sini ekleyin
+        job_id: selectedJob,
         date: selectedDate.toISOString().split("T")[0],
         job_start_time: assignmentJobStartTime,
       };
@@ -230,7 +271,7 @@ function PersonnelJobTrackingPage() {
                     jobStartTime: assignmentJobStartTime,
                     jobEndTime: "",
                     overtimeHours: { startTime: "", endTime: "" },
-                    jobId: selectedJob, // İş ID'sini ekleyin
+                    jobId: selectedJob,
                   },
                 ],
               }
