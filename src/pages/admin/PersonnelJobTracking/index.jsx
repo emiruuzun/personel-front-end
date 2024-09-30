@@ -71,6 +71,7 @@ function PersonnelJobTrackingPage() {
               status: person.status,
               leaveStartDate: leaveData.data?.startDate || null,
               leaveEndDate: leaveData.data?.endDate || null,
+              assignedAfterLeaveInfo: person.assignedAfterLeaveInfo || null,
             };
           })
         );
@@ -648,6 +649,13 @@ function PersonnelJobTrackingPage() {
                               "tr-TR"
                             )}
                           </span>
+                          {/* İş Dönüşü Atanan İşler Bilgisi */}
+                          {person.assignedAfterLeaveInfo && (
+                            <div className="mt-2 text-blue-600">
+                              <strong>İş Dönüşü Planlanan İş: </strong>
+                              {person.assignedAfterLeaveInfo}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-sm text-red-500 mt-1">
