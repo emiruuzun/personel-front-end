@@ -48,9 +48,16 @@ const AdminWorkUsageChart = () => {
         );
 
         if (response && response.assigned) {
-          const userJobs = response.assigned.filter(
-            (assignment) => assignment.personnel_id._id === userId
-          );
+          let userJobs;
+
+          // Eğer 'Tümü' seçildiyse, filtreleme yapmadan tüm iş atamalarını alıyoruz
+          if (userId === "all") {
+            userJobs = response.assigned;
+          } else {
+            userJobs = response.assigned.filter(
+              (assignment) => assignment.personnel_id._id === userId
+            );
+          }
 
           if (userJobs.length > 0) {
             const jobDetails = userJobs.map((job) => ({
@@ -70,7 +77,11 @@ const AdminWorkUsageChart = () => {
 
             setWorkData(jobDetails);
           } else {
-            toast.info("Seçilen kullanıcı için iş ataması bulunmuyor.");
+            toast.info(
+              userId === "all"
+                ? "Tüm kullanıcılar için iş ataması bulunmuyor."
+                : "Seçilen kullanıcı için iş ataması bulunmuyor."
+            );
             setWorkData(null);
           }
         } else {
@@ -169,6 +180,7 @@ const AdminWorkUsageChart = () => {
               className="block w-full bg-gray-100 border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-indigo-500 transition duration-150 ease-in-out"
             >
               <option value="">Kullanıcı seçin</option>
+              <option value="all">Tümü</option> {/* Tümü seçeneği */}
               {users.map((user) => (
                 <option key={user._id} value={user._id}>
                   {user.name}
