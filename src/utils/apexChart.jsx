@@ -88,12 +88,15 @@ export const generateChartOptions2 = (workData) => ({
       : [],
     labels: {
       style: {
-        colors: "#333", // X ekseni etiketlerini daha belirgin hale getirmek için koyu renk kullanıyoruz
+        colors: "#333",
         fontSize: "12px",
         fontWeight: 600,
       },
+      rotate: -45, // Etiketleri 45 derece eğik yapar
+      maxHeight: 180, // Etiketlerin maksimum yüksekliğini sınırlar
     },
   },
+
   yaxis: {
     title: {
       text: "Saat",
