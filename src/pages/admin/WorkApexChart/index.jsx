@@ -3,7 +3,10 @@ import ReactApexChart from "react-apexcharts";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { generateChartOptions2 } from "../../../utils/apexChart"; // Dinamik chart options fonksiyonu
+import {
+  generateChartOptions2,
+  generateChartSeries2,
+} from "../../../utils/apexChart"; // Dinamik chart options fonksiyonu
 import {
   getWorkRecordsByDateRange,
   getAllUsers,
@@ -22,8 +25,6 @@ const AdminWorkUsageChart = () => {
   // Çalışma ve mesai saatlerini hesaplayan fonksiyon
   function calculateTimeDifference(startTime, endTime) {
     if (!startTime || !endTime) return "0 saat 0 dakika";
-    console.log("Start Time:", startTime); // Bu değerleri kontrol ediyoruz
-    console.log("End Time:", endTime);
     const start = new Date(`1970-01-01T${startTime}`);
     const end = new Date(`1970-01-01T${endTime}`);
     const diffMs = end - start;
@@ -125,36 +126,7 @@ const AdminWorkUsageChart = () => {
   }, [selectedUser, fetchUserWorkData]);
 
   // Grafik verilerini hazırlama
-  const chartSeries = workData
-    ? [
-        {
-          name: "Çalışma Saatleri",
-          data: workData.map((job) => {
-            const match = job.workHours.match(/(\d+)\s*saat\s*(\d+)\s*dakika/);
-            if (match) {
-              const hours = parseFloat(match[1]);
-              const minutes = parseFloat(match[2]);
-              return (hours + minutes / 60).toFixed(2); // Ondalık basamak sayısını 2 ile sınırla
-            }
-            return 0;
-          }),
-        },
-        {
-          name: "Mesai Saatleri",
-          data: workData.map((job) => {
-            const match = job.overtimeHours.match(
-              /(\d+)\s*saat\s*(\d+)\s*dakika/
-            );
-            if (match) {
-              const hours = parseFloat(match[1]);
-              const minutes = parseFloat(match[2]);
-              return (hours + minutes / 60).toFixed(2); // Ondalık basamak sayısını 2 ile sınırla
-            }
-            return 0;
-          }),
-        },
-      ]
-    : [];
+  const chartSeries = generateChartSeries2(workData);
 
   return (
     <AdminDashboardlayout>
