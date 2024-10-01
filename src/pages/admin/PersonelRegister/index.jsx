@@ -58,9 +58,9 @@ function PersonelRegister() {
 
   return (
     <AdminDashboardlayout>
-      <div className="p-6 bg-gradient-to-r from-blue-100 to-indigo-100 min-h-screen">
+      <div className="p-6 min-h-screen">
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="px-6 py-4 bg-indigo-600 text-white text-center">
+          <div className="px-6 py-4 bg-gray-800 text-white text-center">
             <h2 className="text-3xl font-bold">Yeni Personel Kaydı</h2>
           </div>
           <form onSubmit={handleSubmit} className="p-6">
@@ -188,7 +188,7 @@ function PersonelRegister() {
             <div className="mt-8">
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+                className="w-full py-3 px-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
               >
                 Personel Kaydet
               </button>
