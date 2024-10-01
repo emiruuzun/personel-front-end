@@ -73,7 +73,6 @@ export const generateChartOptions2 = (workData) => ({
     },
   },
   xaxis: {
-    // Firma adı ve iş adını göstermek için kategoriler
     categories: workData
       ? workData.map((job) => `${job.companyName} - ${job.jobName}`)
       : [],
@@ -82,6 +81,13 @@ export const generateChartOptions2 = (workData) => ({
     title: {
       text: "Saat",
     },
+    labels: {
+      formatter: function (val) {
+        const hours = Math.floor(val);
+        const minutes = Math.round((val - hours) * 60);
+        return `${hours} saat ${minutes} dakika`;
+      },
+    },
   },
   fill: {
     opacity: 1,
@@ -89,7 +95,9 @@ export const generateChartOptions2 = (workData) => ({
   tooltip: {
     y: {
       formatter: function (val) {
-        return val + " saat";
+        const hours = Math.floor(val);
+        const minutes = Math.round((val - hours) * 60);
+        return `${hours} saat ${minutes} dakika`;
       },
     },
   },
@@ -99,6 +107,14 @@ export const generateChartOptions2 = (workData) => ({
   },
   legend: {
     position: "top",
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: function (val) {
+      const hours = Math.floor(val);
+      const minutes = Math.round((val - hours) * 60);
+      return `${hours} saat ${minutes} dakika`;
+    },
   },
 });
 

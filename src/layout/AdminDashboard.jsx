@@ -46,7 +46,9 @@ function AdminDashboardLayout({ children }) {
         return <FaCalendarCheck className="mr-2" />;
       case "Duyuru":
         return <FaBullhorn className="mr-2" />;
-      case "Kullanım Grafiği":
+      case "İzin Kullanım Grafiği":
+        return <FaChartBar className="mr-2" />;
+      case "İş Atama Grafiği":
         return <FaChartBar className="mr-2" />;
       default:
         return <FaBox className="mr-2" />;
