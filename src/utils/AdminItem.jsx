@@ -48,9 +48,14 @@ export const adminItem = [
         description: "Duyuru",
       },
       {
-        name: "Kullanım Grafiği",
+        name: "İzin Kullanım Grafiği",
         slug: "admin/usage-chart",
         description: "Kullanım Grafiği",
+      },
+      {
+        name: "İş Atama Grafiği",
+        slug: "admin/work-chart",
+        description: "İş Atama Grafiği",
       },
     ],
   },

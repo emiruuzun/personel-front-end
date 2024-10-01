@@ -413,10 +413,10 @@ export const getLastLeaveByUserId = async (userId) => {
 
     const response = await apiRequest.json();
 
-    // Yanıtın boş olup olmadığını kontrol et
-    if (!response.success || !response.data) {
-      toast.info("Bu kullanıcıya ait herhangi bir izin talebi bulunmuyor.");
-    }
+    // // Yanıtın boş olup olmadığını kontrol et
+    // if (!response.success || !response.data) {
+    //   toast.info("Bu kullanıcıya ait herhangi bir izin talebi bulunmuyor.");
+    // }
     return response;
   } catch (error) {
     console.error("Kullanıcı izinlerini çekerken hata oluştu.", error);

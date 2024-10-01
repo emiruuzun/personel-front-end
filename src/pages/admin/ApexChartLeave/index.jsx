@@ -16,6 +16,7 @@ const AdminLeaveUsageChart = () => {
     async (userId) => {
       try {
         const response = await getAllLeave(); // Tüm izin taleplerini getir
+
         if (response.success && response.data.length > 0) {
           const userLeaves = response.data.filter(
             (leave) => leave.userId._id === userId
@@ -28,7 +29,10 @@ const AdminLeaveUsageChart = () => {
           };
 
           userLeaves.forEach((leave) => {
-            if (leave.status === "Onaylandı") {
+            if (
+              leave.status === "Onaylandı" ||
+              leave.status === "Geçmiş İzin"
+            ) {
               leaveTypes[leave.leaveType] += leave.leaveDays;
             }
           });
