@@ -151,7 +151,7 @@ export const generateChartOptions2 = (workData) => ({
   dataLabels: {
     enabled: true,
     style: {
-      fontSize: "12px",
+      fontSize: "8px",
       colors: ["#333"], // Veri etiketlerini koyu renkle daha dikkat çekici yapıyoruz
     },
     formatter: function (val) {
