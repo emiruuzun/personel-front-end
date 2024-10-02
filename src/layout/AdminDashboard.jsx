@@ -12,6 +12,7 @@ import {
   FaBuilding,
   FaChartBar,
   FaBullhorn,
+  FaHome,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -69,9 +70,17 @@ function AdminDashboardLayout({ children }) {
               className="flex flex-col h-full p-6"
             >
               <div className="flex items-center justify-between mb-8">
-                <h1 className="text-xl font-bold mb-4 pb-2 text-indigo-400 hidden md:block">
-                  Admin Panel
-                </h1>
+                <div className="flex items-center space-x-4">
+                  <NavLink
+                    to="/"
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
+                  >
+                    <FaHome size={24} />
+                  </NavLink>
+                  <h1 className="text-xl font-bold text-indigo-400 hidden md:block">
+                    Admin Panel
+                  </h1>
+                </div>
                 <button
                   onClick={toggleSidebar}
                   className="md:hidden text-white"

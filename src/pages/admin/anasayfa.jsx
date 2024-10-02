@@ -95,7 +95,7 @@ function Anasayfa() {
           {/* Dinamik olarak totalUsers state'inden ve activeCompanies state'inden değerler alınıyor */}
           <SummaryCard
             icon={FaUsers}
-            title="Toplam Kullanıcı"
+            title="Toplam Personel"
             value={totalUsers}
           />
           <SummaryCard
