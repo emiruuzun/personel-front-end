@@ -507,3 +507,29 @@ export const completeJob = async (companyId, jobId) => {
     toast.error("İşi tamamlama sırasında bir hata oluştu.");
   }
 };
+
+export const getAllJobsByCompanies = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/company/get-all-jobs`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      toast.success("Tüm iş kayıtları başarıyla alındı!", { autoClose: 2000 });
+      return data;
+    } else {
+      toast.error(data.message || "İş kayıtları alınamadı.");
+      return null;
+    }
+  } catch (error) {
+    console.error("API isteği başarısız oldu:", error);
+    toast.error("İş kayıtları alınamadı.");
+    throw new Error("API request failed");
+  }
+};

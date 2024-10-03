@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import AdminDashboardlayout from "../../layout/AdminDashboard";
-import { getAllUsers, getAllCompanies } from "../../services/admin"; // getAllUsers ve getAllCompanies servislerini import ediyoruz
+import {
+  getAllUsers,
+  getAllCompanies,
+  getAllJobsByCompanies,
+} from "../../services/admin"; // getAllUsers ve getAllCompanies servislerini import ediyoruz
 import { motion } from "framer-motion";
 import {
   FaUsers,
@@ -34,6 +38,8 @@ function Anasayfa() {
   // State'ler
   const [totalUsers, setTotalUsers] = useState(0);
   const [activeCompanies, setActiveCompanies] = useState(0); // Aktif şirketler için state
+  const [completedJobsCount, setCompletedJobsCount] = useState(0); // Tamamlanan işler
+  const [activeJobsCount, setActiveJobsCount] = useState(0); // Devam eden işler
 
   // API çağrılarıyla kullanıcı ve şirket verilerini çekiyoruz
   useEffect(() => {
@@ -58,16 +64,25 @@ function Anasayfa() {
         console.error("Şirket verileri alınamadı:", error);
       }
     };
+    const fetchJobs = async () => {
+      try {
+        const response = await getAllJobsByCompanies();
+        if (response && response.success) {
+          // Tamamlanan ve aktif işleri ayırıyoruz
+          const completedJobs = response.completedJobs.length;
+          const activeJobs = response.activeJobs.length;
 
+          setCompletedJobsCount(completedJobs); // Tamamlanan işleri set ediyoruz
+          setActiveJobsCount(activeJobs); // Aktif işleri set ediyoruz
+        }
+      } catch (error) {
+        console.error("İş verileri alınamadı:", error);
+      }
+    };
+    fetchJobs();
     fetchUsers();
     fetchCompanies();
   }, []);
-
-  // Diğer sabit veriler
-  const summaryData = {
-    completedTasks: 3567,
-    monthlyGrowth: 12.5,
-  };
 
   const chartData = {
     labels: ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran"],
@@ -105,13 +120,13 @@ function Anasayfa() {
           />
           <SummaryCard
             icon={FaClipboardCheck}
-            title="Tamamlanan Görevler"
-            value={summaryData.completedTasks}
+            title="Tamamlanan İşler"
+            value={completedJobsCount}
           />
           <SummaryCard
             icon={FaChartLine}
-            title="Aylık Büyüme"
-            value={`%${summaryData.monthlyGrowth}`}
+            title="Devam Eden İşler"
+            value={activeJobsCount}
           />
         </div>
 
