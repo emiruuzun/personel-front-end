@@ -4,6 +4,7 @@ import {
   getAllUsers,
   getAllCompanies,
   getAllJobsByCompanies,
+  getRecentActivities,
 } from "../../services/admin";
 import { motion } from "framer-motion";
 import {
@@ -188,19 +189,30 @@ const EnhancedCard = ({ title, items, icon: Icon }) => {
 };
 
 const EnhancedActivityTaskSection = () => {
-  const recentActivities = [
-    "Yeni kullanıcı kaydı: Ahmet Yılmaz",
-    "Görev tamamlandı: Rapor hazırlama",
-    "Yeni şirket eklendi: ABC Ltd.",
-    "Sistem güncellemesi yapıldı",
-  ];
-
+  const [recentActivities, setRecentActivities] = useState([]);
   const upcomingTasks = [
     "Aylık rapor hazırlama",
     "Personel değerlendirme toplantısı",
     "Sistem bakımı",
     "Yeni proje başlatma toplantısı",
   ];
+
+  useEffect(() => {
+    const fetchRecentActivities = async () => {
+      try {
+        const activities = await getRecentActivities();
+        if (activities) {
+          setRecentActivities(
+            activities.map((activity) => activity.description)
+          );
+        }
+      } catch (error) {
+        console.error("Aktiviteler alınamadı:", error);
+      }
+    };
+
+    fetchRecentActivities();
+  }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">

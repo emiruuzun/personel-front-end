@@ -533,3 +533,30 @@ export const getAllJobsByCompanies = async () => {
     throw new Error("API request failed");
   }
 };
+
+export const getRecentActivities = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/activities/recent`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      // Başarılı istek
+      return data.activities; // Aktivite verilerini döndür
+    } else {
+      // Başarısız istek
+      toast.error(data.message || "Aktiviteler alınamadı.");
+      return null;
+    }
+  } catch (error) {
+    console.error("API isteği başarısız oldu:", error);
+    toast.error("Aktiviteler alınamadı.");
+    throw new Error("API request failed");
+  }
+};
