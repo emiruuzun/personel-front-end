@@ -4,13 +4,16 @@ import {
   getAllUsers,
   getAllCompanies,
   getAllJobsByCompanies,
-} from "../../services/admin"; // getAllUsers ve getAllCompanies servislerini import ediyoruz
+} from "../../services/admin";
 import { motion } from "framer-motion";
 import {
   FaUsers,
   FaBuilding,
   FaClipboardCheck,
   FaChartLine,
+  FaClock,
+  FaCheckCircle,
+  FaBell,
 } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
 import {
@@ -35,19 +38,17 @@ ChartJS.register(
 );
 
 function Anasayfa() {
-  // State'ler
   const [totalUsers, setTotalUsers] = useState(0);
-  const [activeCompanies, setActiveCompanies] = useState(0); // Aktif şirketler için state
-  const [completedJobsCount, setCompletedJobsCount] = useState(0); // Tamamlanan işler
-  const [activeJobsCount, setActiveJobsCount] = useState(0); // Devam eden işler
+  const [activeCompanies, setActiveCompanies] = useState(0);
+  const [completedJobsCount, setCompletedJobsCount] = useState(0);
+  const [activeJobsCount, setActiveJobsCount] = useState(0);
 
-  // API çağrılarıyla kullanıcı ve şirket verilerini çekiyoruz
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await getAllUsers();
         if (response && response.data.length > 0) {
-          setTotalUsers(response.data.length); // Toplam kullanıcı sayısını state'e set ediyoruz
+          setTotalUsers(response.data.length);
         }
       } catch (error) {
         console.error("Kullanıcı verileri alınamadı:", error);
@@ -58,27 +59,28 @@ function Anasayfa() {
       try {
         const response = await getAllCompanies();
         if (response && response.data.length > 0) {
-          setActiveCompanies(response.data.length); // Aktif şirket sayısını state'e set ediyoruz
+          setActiveCompanies(response.data.length);
         }
       } catch (error) {
         console.error("Şirket verileri alınamadı:", error);
       }
     };
+
     const fetchJobs = async () => {
       try {
         const response = await getAllJobsByCompanies();
         if (response && response.success) {
-          // Tamamlanan ve aktif işleri ayırıyoruz
           const completedJobs = response.completedJobs.length;
           const activeJobs = response.activeJobs.length;
 
-          setCompletedJobsCount(completedJobs); // Tamamlanan işleri set ediyoruz
-          setActiveJobsCount(activeJobs); // Aktif işleri set ediyoruz
+          setCompletedJobsCount(completedJobs);
+          setActiveJobsCount(activeJobs);
         }
       } catch (error) {
         console.error("İş verileri alınamadı:", error);
       }
     };
+
     fetchJobs();
     fetchUsers();
     fetchCompanies();
@@ -107,7 +109,6 @@ function Anasayfa() {
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Genel Bakış</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Dinamik olarak totalUsers state'inden ve activeCompanies state'inden değerler alınıyor */}
           <SummaryCard
             icon={FaUsers}
             title="Toplam Personel"
@@ -135,24 +136,7 @@ function Anasayfa() {
           <Line data={chartData} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <QuickAccessCard
-            title="Son Aktiviteler"
-            items={[
-              "Yeni kullanıcı kaydı: Ahmet Yılmaz",
-              "Görev tamamlandı: Rapor hazırlama",
-              "Yeni şirket eklendi: ABC Ltd.",
-            ]}
-          />
-          <QuickAccessCard
-            title="Yaklaşan Görevler"
-            items={[
-              "Aylık rapor hazırlama",
-              "Personel değerlendirme toplantısı",
-              "Sistem bakımı",
-            ]}
-          />
-        </div>
+        <EnhancedActivityTaskSection />
       </motion.div>
     </AdminDashboardlayout>
   );
@@ -171,19 +155,67 @@ function SummaryCard({ icon: Icon, title, value }) {
   );
 }
 
-function QuickAccessCard({ title, items }) {
+const EnhancedCard = ({ title, items, icon: Icon }) => {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
-      <ul className="space-y-2">
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
+    >
+      <div className="flex items-center mb-4">
+        <Icon className="text-2xl text-indigo-600 mr-2" />
+        <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
+      </div>
+      <ul className="space-y-3">
         {items.map((item, index) => (
-          <li key={index} className="text-gray-600">
-            {item}
-          </li>
+          <motion.li
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md hover:bg-indigo-50 transition-colors duration-200"
+          >
+            {title.includes("Aktiviteler") ? (
+              <FaCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+            ) : (
+              <FaClock className="text-orange-500 mt-1 flex-shrink-0" />
+            )}
+            <span className="text-gray-700">{item}</span>
+          </motion.li>
         ))}
       </ul>
+    </motion.div>
+  );
+};
+
+const EnhancedActivityTaskSection = () => {
+  const recentActivities = [
+    "Yeni kullanıcı kaydı: Ahmet Yılmaz",
+    "Görev tamamlandı: Rapor hazırlama",
+    "Yeni şirket eklendi: ABC Ltd.",
+    "Sistem güncellemesi yapıldı",
+  ];
+
+  const upcomingTasks = [
+    "Aylık rapor hazırlama",
+    "Personel değerlendirme toplantısı",
+    "Sistem bakımı",
+    "Yeni proje başlatma toplantısı",
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <EnhancedCard
+        title="Son Aktiviteler"
+        items={recentActivities}
+        icon={FaCheckCircle}
+      />
+      <EnhancedCard
+        title="Yaklaşan Görevler"
+        items={upcomingTasks}
+        icon={FaBell}
+      />
     </div>
   );
-}
+};
 
 export default Anasayfa;
