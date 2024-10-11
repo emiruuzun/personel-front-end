@@ -10,6 +10,7 @@ import {
   FaBuilding,
   FaSearch,
   FaChevronDown,
+  FaSpinner,
 } from "react-icons/fa";
 
 function JobAssignmentsList() {
@@ -18,10 +19,12 @@ function JobAssignmentsList() {
   const [unassignedRecords, setUnassignedRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   registerLocale("tr", tr);
 
   const fetchWorkRecords = useCallback(async () => {
+    setIsLoading(true);
     try {
       const formattedDate = selectedDate.toISOString().split("T")[0];
 
@@ -36,6 +39,8 @@ function JobAssignmentsList() {
       }
     } catch (error) {
       console.error("İş kayıtları alınamadı:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [selectedDate]);
 
@@ -46,33 +51,34 @@ function JobAssignmentsList() {
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
-function calculateTotalWorkingHoursWithBreak(record) {
-  const startTime = record.job_start_time;
-  const endTime = record.job_end_time;
 
-  if (!startTime || !endTime) return "0 saat 0 dakika";
+  function calculateTotalWorkingHoursWithBreak(record) {
+    const startTime = record.job_start_time;
+    const endTime = record.job_end_time;
 
-  const startHour = parseInt(startTime.split(":")[0], 10);
-  const endHour = parseInt(endTime.split(":")[0], 10);
+    if (!startTime || !endTime) return "0 saat 0 dakika";
 
-  let workingHours = calculateTimeDifference(startTime, endTime);
+    const startHour = parseInt(startTime.split(":")[0], 10);
+    const endHour = parseInt(endTime.split(":")[0], 10);
 
-  if (startHour < 13 && endHour > 12) {
-    // Öğle molası ekleniyor
-    const [workHrs, workMins] = workingHours
-      .split(" saat ")
-      .map((v) => parseInt(v) || 0);
-    const totalMinutes = workHrs * 60 + workMins;
-    const adjustedMinutes = totalMinutes - 60; // 1 saat yemek molası çıkarılıyor
+    let workingHours = calculateTimeDifference(startTime, endTime);
 
-    const adjustedHrs = Math.floor(adjustedMinutes / 60);
-    const adjustedMins = adjustedMinutes % 60;
+    if (startHour < 13 && endHour > 12) {
+      // Öğle molası ekleniyor
+      const [workHrs, workMins] = workingHours
+        .split(" saat ")
+        .map((v) => parseInt(v) || 0);
+      const totalMinutes = workHrs * 60 + workMins;
+      const adjustedMinutes = totalMinutes - 60; // 1 saat yemek molası çıkarılıyor
 
-    workingHours = `${adjustedHrs} saat ${adjustedMins} dakika (1 saat yemek molası)`;
+      const adjustedHrs = Math.floor(adjustedMinutes / 60);
+      const adjustedMins = adjustedMinutes % 60;
+
+      workingHours = `${adjustedHrs} saat ${adjustedMins} dakika (1 saat yemek molası)`;
+    }
+
+    return workingHours;
   }
-
-  return workingHours;
-}
 
   function calculateTimeDifference(startTime, endTime) {
     if (!startTime || !endTime) return "0 saat 0 dakika";
@@ -96,11 +102,9 @@ function calculateTotalWorkingHoursWithBreak(record) {
     const startHour = parseInt(startTime.split(":")[0], 10);
     const endHour = parseInt(endTime.split(":")[0], 10);
 
-    // Eğer başlangıç saati 13:00'dan önce ise 1 saat yemek molası düşülecek
     let workingHours = calculateTimeDifference(startTime, endTime);
 
     if (startHour < 13 && endHour > 12) {
-      // 1 saat yemek molasını ek olarak çıkar
       const [workHrs, workMins] = workingHours
         .split(" saat ")
         .map((v) => parseInt(v) || 0);
@@ -143,6 +147,16 @@ function calculateTotalWorkingHoursWithBreak(record) {
         .includes(searchTerm.toLowerCase()) ||
       record.company_id?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <AdminDashboardlayout>
+        <div className="flex items-center justify-center h-screen">
+          <FaSpinner className="animate-spin text-indigo-600 text-4xl" />
+        </div>
+      </AdminDashboardlayout>
+    );
+  }
 
   return (
     <AdminDashboardlayout>
@@ -197,7 +211,8 @@ function calculateTotalWorkingHoursWithBreak(record) {
                   Toplam: {filteredAssignedRecords.length}
                 </span>
               </div>
-              <div className="overflow-x-auto">
+              {/* Masaüstü için tablo görünümü */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -239,6 +254,32 @@ function calculateTotalWorkingHoursWithBreak(record) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              {/* Mobil için kart görünümü */}
+              <div className="md:hidden">
+                {filteredAssignedRecords.map((record) => (
+                  <div key={record._id} className="p-4 border-b">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold text-lg text-gray-800">
+                          {record.personnel_id.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {record.company_id?.name || "Belirtilmedi"}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedRecord(record)}
+                        className="text-indigo-600 hover:text-indigo-900 flex items-center text-sm"
+                      >
+                        Detaylar <FaChevronDown className="ml-1" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-700">
+                      <p>Toplam Süre: {calculateTotalHours(record)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -330,8 +371,7 @@ function calculateTotalWorkingHoursWithBreak(record) {
                     <p className="text-md font-bold text-gray-800 mt-1">
                       Toplam:{" "}
                       {calculateTotalWorkingHoursWithBreak(selectedRecord)}
-                    </p>{" "}
-                    {/* Burada toplam çalışma süresi ve mola hesaplanmış olarak gösterilir */}
+                    </p>
                   </div>
 
                   {/* Mesai Saatleri */}

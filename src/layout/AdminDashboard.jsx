@@ -13,6 +13,7 @@ import {
   FaChartBar,
   FaBullhorn,
   FaHome,
+  FaTimes,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -67,7 +68,7 @@ function AdminDashboardLayout({ children }) {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar Toggle Button for Small Screens */}
-      {isSmallScreen && (
+      {isSmallScreen && !isSidebarOpen && (
         <button
           onClick={toggleSidebar}
           className="fixed top-4 left-4 z-40 bg-gray-900 text-white p-2 rounded-md"
@@ -111,7 +112,7 @@ function AdminDashboardLayout({ children }) {
                 </div>
                 {isSmallScreen && (
                   <button onClick={toggleSidebar} className="text-white">
-                    <FaBars size={24} />
+                    <FaTimes size={24} />
                   </button>
                 )}
               </div>
