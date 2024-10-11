@@ -103,18 +103,13 @@ function PersonnelJobTrackingPage() {
         const assignedPersonnelIds = assignedPersonnel.map((p) => p.id);
         const unassignedPersonnelData = allPersonnelWithLeave.filter(
           (person) => {
-            // Atanmış mı diye kontrol ediyoruz
             const isAssigned = assignedPersonnelIds.includes(person.id);
-
-            // İzinli mi kontrol edelim
             const isOnLeave =
               person.status === "İzinli" &&
               person.leaveStartDate &&
               person.leaveEndDate &&
               new Date(person.leaveStartDate) <= new Date(selectedDate) &&
               new Date(person.leaveEndDate) >= new Date(selectedDate);
-
-            // Eğer atanmış değilse ve izinli değilse, atanabilir personel listesine ekleyelim
             return !isAssigned && !isOnLeave;
           }
         );
@@ -185,27 +180,16 @@ function PersonnelJobTrackingPage() {
       fetchDailyWorkRecords();
     }
   }, [fetchDailyWorkRecords, allPersonnelWithLeave, selectedDate]);
+
   useEffect(() => {
     const filterPersonnel = () => {
       const assignablePersonnel = allPersonnelWithLeave.filter((person) => {
         const isActive =
           person.status === "Aktif" ||
           person.status === "Onaylanmış (Yaklaşan)";
-
         const isNotOnLeave =
-          !person.leaveStartDate || // Eğer izin başlangıç tarihi yoksa atanabilir
-          new Date(selectedDate) > new Date(person.leaveEndDate); // Seçilen tarih, izin bitiş tarihinden sonraysa atanabilir
-
-        console.log(
-          "Person:",
-          person.name,
-          "isActive:",
-          isActive,
-          "isNotOnLeave:",
-          isNotOnLeave
-        );
-
-        // Hem aktif hem de izni bitmiş olmalı ki atanabilir listeye ekleyelim
+          !person.leaveStartDate ||
+          new Date(selectedDate) > new Date(person.leaveEndDate);
         return isActive && isNotOnLeave;
       });
 
@@ -216,16 +200,14 @@ function PersonnelJobTrackingPage() {
           person.leaveEndDate &&
           new Date(person.leaveStartDate) <= selectedDate &&
           new Date(person.leaveEndDate) >= selectedDate;
-
         return isOnLeave;
       });
 
-      // Atanabilir ve izinli personel listelerini güncelle
       setUnassignedPersonnel(assignablePersonnel);
       setInactivePersonnel(inactivePersonnel);
     };
 
-    filterPersonnel(); // Filtreleme işlemini her yeni veri geldiğinde tetikle
+    filterPersonnel();
   }, [selectedDate, allPersonnelWithLeave]);
 
   const openAssignModal = (person) => {
@@ -465,9 +447,9 @@ function PersonnelJobTrackingPage() {
 
   return (
     <AdminDashboardlayout>
-      <div className="p-6 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-extrabold text-indigo-500 flex items-center">
+      <div className="p-4 sm:p-6 bg-gray-100 min-h-screen">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-indigo-500 flex items-center mb-4 sm:mb-0">
             <FaUsers className="mr-2" /> Personel İş Takibi
           </h2>
           <div className="flex items-center">
@@ -482,8 +464,8 @@ function PersonnelJobTrackingPage() {
           </div>
         </div>
 
-        <div className="flex gap-6">
-          <div className="w-1/4 bg-white rounded-lg shadow-lg p-4 h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/4 bg-white rounded-lg shadow-lg p-4 h-auto lg:h-[calc(100vh-200px)] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-gray-700 flex items-center">
               <FaBuilding className="mr-2" /> Firmalar
             </h3>
@@ -507,11 +489,11 @@ function PersonnelJobTrackingPage() {
             </ul>
           </div>
 
-          <div className="w-3/4 space-y-6">
+          <div className="w-full lg:w-3/4 space-y-6">
             <div className="bg-white rounded-lg shadow-lg p-4">
               {activeCompany && (
                 <div>
-                  <h3 className="text-2xl font-bold mb-4 text-gray-800">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     {companies.find((c) => c.id === activeCompany)?.name}
                   </h3>
 
@@ -519,13 +501,13 @@ function PersonnelJobTrackingPage() {
                     <h4 className="text-lg font-semibold mb-2 text-gray-700">
                       Atanmış Personel
                     </h4>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {companies
                         .find((c) => c.id === activeCompany)
                         ?.personnel.map((person) => (
                           <div
                             key={person.id}
-                            className="flex items-center justify-between bg-white p-3 rounded-lg shadow"
+                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-3 rounded-lg shadow"
                           >
                             <div>
                               <span className="font-medium">{person.name}</span>
@@ -546,7 +528,7 @@ function PersonnelJobTrackingPage() {
                                   </div>
                                 )}
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 mt-2 sm:mt-0">
                               <button
                                 onClick={() => openEditModal(person)}
                                 className="text-blue-500 hover:text-blue-700"
@@ -576,8 +558,8 @@ function PersonnelJobTrackingPage() {
               )}
             </div>
 
-            <div className="flex gap-6">
-              <div className="w-1/2 bg-white rounded-lg shadow-lg p-4">
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="w-full sm:w-1/2 bg-white rounded-lg shadow-lg p-4">
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserPlus className="mr-2" /> Atanabilir Personel
                 </h3>
@@ -622,7 +604,7 @@ function PersonnelJobTrackingPage() {
                   ))}
                 </div>
               </div>
-              <div className="w-1/2 bg-white rounded-lg shadow-lg p-4">
+              <div className="w-full sm:w-1/2 bg-white rounded-lg shadow-lg p-4">
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserMinus className="mr-2" /> İzinli Personel
                 </h3>
@@ -649,7 +631,6 @@ function PersonnelJobTrackingPage() {
                               "tr-TR"
                             )}
                           </span>
-                          {/* İş Dönüşü Atanan İşler Bilgisi */}
                           {person.assignedAfterLeaveInfo && (
                             <div className="mt-2 text-blue-600">
                               <strong>İş Dönüşü Planlanan İş: </strong>
@@ -673,7 +654,7 @@ function PersonnelJobTrackingPage() {
         <div className="fixed bottom-4 right-4">
           <button
             onClick={handleSaveAllAssignments}
-            className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center text-sm sm:text-base"
           >
             <FaSave className="mr-2" /> Kaydet
           </button>
@@ -681,8 +662,8 @@ function PersonnelJobTrackingPage() {
       </div>
 
       {showAssignModal && selectedPersonnelForAssignment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">
                 {selectedPersonnelForAssignment.name} için İş Başlangıç Saati
@@ -745,8 +726,8 @@ function PersonnelJobTrackingPage() {
       )}
 
       {showEditModal && editingPerson && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">
                 {editingPerson.name} için Çalışma Saatleri

@@ -46,6 +46,33 @@ function JobAssignmentsList() {
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
+function calculateTotalWorkingHoursWithBreak(record) {
+  const startTime = record.job_start_time;
+  const endTime = record.job_end_time;
+
+  if (!startTime || !endTime) return "0 saat 0 dakika";
+
+  const startHour = parseInt(startTime.split(":")[0], 10);
+  const endHour = parseInt(endTime.split(":")[0], 10);
+
+  let workingHours = calculateTimeDifference(startTime, endTime);
+
+  if (startHour < 13 && endHour > 12) {
+    // Öğle molası ekleniyor
+    const [workHrs, workMins] = workingHours
+      .split(" saat ")
+      .map((v) => parseInt(v) || 0);
+    const totalMinutes = workHrs * 60 + workMins;
+    const adjustedMinutes = totalMinutes - 60; // 1 saat yemek molası çıkarılıyor
+
+    const adjustedHrs = Math.floor(adjustedMinutes / 60);
+    const adjustedMins = adjustedMinutes % 60;
+
+    workingHours = `${adjustedHrs} saat ${adjustedMins} dakika (1 saat yemek molası)`;
+  }
+
+  return workingHours;
+}
 
   function calculateTimeDifference(startTime, endTime) {
     if (!startTime || !endTime) return "0 saat 0 dakika";
@@ -61,10 +88,31 @@ function JobAssignmentsList() {
   }
 
   function calculateTotalHours(record) {
-    const workingHours = calculateTimeDifference(
-      record.job_start_time,
-      record.job_end_time
-    );
+    const startTime = record.job_start_time;
+    const endTime = record.job_end_time;
+
+    if (!startTime || !endTime) return "0 saat 0 dakika";
+
+    const startHour = parseInt(startTime.split(":")[0], 10);
+    const endHour = parseInt(endTime.split(":")[0], 10);
+
+    // Eğer başlangıç saati 13:00'dan önce ise 1 saat yemek molası düşülecek
+    let workingHours = calculateTimeDifference(startTime, endTime);
+
+    if (startHour < 13 && endHour > 12) {
+      // 1 saat yemek molasını ek olarak çıkar
+      const [workHrs, workMins] = workingHours
+        .split(" saat ")
+        .map((v) => parseInt(v) || 0);
+      const totalMinutes = workHrs * 60 + workMins;
+      const adjustedMinutes = totalMinutes - 60; // 1 saat yemek molası düşülüyor
+
+      const adjustedHrs = Math.floor(adjustedMinutes / 60);
+      const adjustedMins = adjustedMinutes % 60;
+
+      workingHours = `${adjustedHrs} saat ${adjustedMins} dakika`;
+    }
+
     const overtimeHours = calculateTimeDifference(
       record.overtime_hours?.start_time,
       record.overtime_hours?.end_time
@@ -270,6 +318,7 @@ function JobAssignmentsList() {
                     </p>
                   </div>
 
+                  {/* Çalışma Saatleri */}
                   <div className="mb-4">
                     <p className="text-sm font-semibold text-gray-700 mb-1">
                       Çalışma Saatleri:
@@ -280,12 +329,12 @@ function JobAssignmentsList() {
                     </p>
                     <p className="text-md font-bold text-gray-800 mt-1">
                       Toplam:{" "}
-                      {calculateTimeDifference(
-                        selectedRecord.job_start_time,
-                        selectedRecord.job_end_time
-                      )}
-                    </p>
+                      {calculateTotalWorkingHoursWithBreak(selectedRecord)}
+                    </p>{" "}
+                    {/* Burada toplam çalışma süresi ve mola hesaplanmış olarak gösterilir */}
                   </div>
+
+                  {/* Mesai Saatleri */}
                   <div className="mb-4">
                     <p className="text-sm font-semibold text-gray-700 mb-1">
                       Mesai Saatleri:
@@ -298,7 +347,7 @@ function JobAssignmentsList() {
                           {selectedRecord.overtime_hours.end_time}
                         </p>
                         <p className="text-md font-bold text-gray-800 mt-1">
-                          Toplam:{" "}
+                          Toplam Mesai:{" "}
                           {calculateTimeDifference(
                             selectedRecord.overtime_hours.start_time,
                             selectedRecord.overtime_hours.end_time

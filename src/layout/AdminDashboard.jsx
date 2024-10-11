@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { adminItem } from "../utils/AdminItem";
 import { logoutUser } from "../services/auth";
@@ -29,8 +29,21 @@ const categoryIcons = {
 function AdminDashboardLayout({ children }) {
   const navigate = useNavigate();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const smallScreen = window.innerWidth < 768;
+      setIsSmallScreen(smallScreen);
+      setIsSidebarOpen(!smallScreen);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Initial check
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -53,12 +66,27 @@ function AdminDashboardLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Sidebar Toggle Button for Small Screens */}
+      {isSmallScreen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-4 left-4 z-40 bg-gray-900 text-white p-2 rounded-md"
+        >
+          <FaBars size={24} />
+        </button>
+      )}
+
       {/* Sidebar */}
       <motion.div
         initial={false}
-        animate={{ width: isSidebarOpen ? "16rem" : "0rem" }}
+        animate={{
+          width: isSidebarOpen ? (isSmallScreen ? "100%" : "16rem") : "0rem",
+          x: isSidebarOpen ? 0 : "-100%",
+        }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-y-0 left-0 z-30 bg-gray-900 text-white shadow-lg overflow-hidden md:relative"
+        className={`fixed inset-y-0 left-0 z-30 bg-gray-900 text-white shadow-lg overflow-hidden ${
+          isSmallScreen ? "w-full" : "md:relative"
+        }`}
       >
         <AnimatePresence>
           {isSidebarOpen && (
@@ -81,12 +109,11 @@ function AdminDashboardLayout({ children }) {
                     Admin Panel
                   </h1>
                 </div>
-                <button
-                  onClick={toggleSidebar}
-                  className="md:hidden text-white"
-                >
-                  <FaBars size={24} />
-                </button>
+                {isSmallScreen && (
+                  <button onClick={toggleSidebar} className="text-white">
+                    <FaBars size={24} />
+                  </button>
+                )}
               </div>
               <nav className="flex-grow space-y-6">
                 {adminItem.map((section) => (
