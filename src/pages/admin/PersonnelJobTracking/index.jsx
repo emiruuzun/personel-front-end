@@ -23,9 +23,11 @@ import {
   FaTimes,
   FaSave,
   FaCalendarAlt,
+  FaSpinner,
 } from "react-icons/fa";
 
 function PersonnelJobTrackingPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [companies, setCompanies] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -83,6 +85,7 @@ function PersonnelJobTrackingPage() {
   };
 
   const fetchDailyWorkRecords = useCallback(async () => {
+    setIsLoading(true);
     try {
       const formattedDate = selectedDate.toISOString().split("T")[0];
       const response = await getDailyWorkRecords(formattedDate);
@@ -126,6 +129,8 @@ function PersonnelJobTrackingPage() {
       }
     } catch (error) {
       console.error("Günlük iş kayıtları alınamadı.", error);
+    } finally {
+      setIsLoading(false);
     }
   }, [allPersonnelWithLeave, selectedDate]);
 
@@ -165,8 +170,13 @@ function PersonnelJobTrackingPage() {
   };
 
   useEffect(() => {
-    fetchCompanies();
-    fetchAllPersonnelWithLeave();
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      await fetchCompanies();
+      await fetchAllPersonnelWithLeave();
+      setIsLoading(false);
+    };
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
@@ -444,6 +454,16 @@ function PersonnelJobTrackingPage() {
     .filter((person) =>
       person.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+  if (isLoading) {
+    return (
+      <AdminDashboardlayout>
+        <div className="flex items-center justify-center h-screen">
+          <FaSpinner className="animate-spin text-indigo-600 text-4xl" />
+        </div>
+      </AdminDashboardlayout>
+    );
+  }
 
   return (
     <AdminDashboardlayout>

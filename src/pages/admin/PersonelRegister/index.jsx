@@ -11,7 +11,6 @@ import {
   FaUsers,
   FaToggleOn,
 } from "react-icons/fa";
-import { toast } from "react-toastify";
 
 function PersonelRegister() {
   const [formData, setFormData] = useState({
@@ -23,6 +22,7 @@ function PersonelRegister() {
     contact: "",
     status: "Aktif",
     group: "",
+    subgroup: "", // Alt grup için ekleme yapıldı
   });
 
   const handleChange = (e) => {
@@ -35,10 +35,10 @@ function PersonelRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await registerUser(formData);
       if (response.success) {
-        toast.success("Kullanıcı başarıyla kaydedildi!");
         setFormData({
           name: "",
           email: "",
@@ -48,11 +48,11 @@ function PersonelRegister() {
           contact: "",
           status: "Aktif",
           group: "",
+          subgroup: "", // Alt grup sıfırlanacak
         });
       }
     } catch (error) {
       console.error("Kayıt hatası:", error);
-      toast.error("Kayıt sırasında bir hata oluştu.");
     }
   };
 
@@ -167,8 +167,33 @@ function PersonelRegister() {
                   <option value="Aksaray">Aksaray</option>
                   <option value="Kapı">Kapı</option>
                   <option value="Ofis">Ofis</option>
+                  <option value="Taşeron">Taşeron</option>
                 </select>
               </div>
+
+              {/* Taşeron grubu seçildiğinde alt grup seçeneğini göster */}
+              {formData.group === "Taşeron" && (
+                <div className="relative">
+                  <label className="text-gray-700 font-bold mb-2 flex items-center">
+                    <FaUsers className="mr-2" /> Alt Grup (Taşeron)
+                  </label>
+                  <select
+                    name="subgroup"
+                    value={formData.subgroup}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  >
+                    <option value="" disabled>
+                      Alt Grup Seçin
+                    </option>
+                    <option value="Mekanik">Mekanik</option>
+                    <option value="Elektrik">Elektrik</option>
+                    <option value="Boru">Boru</option>
+                  </select>
+                </div>
+              )}
+
               <div className="relative">
                 <label className="text-gray-700 font-bold mb-2 flex items-center">
                   <FaToggleOn className="mr-2" /> Durum
