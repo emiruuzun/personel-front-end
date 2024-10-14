@@ -54,6 +54,7 @@ function PersonnelJobTrackingPage() {
     "Aksaray",
     "Kapı",
     "Ofis",
+    "Taşeron",
   ];
 
   registerLocale("tr", tr);

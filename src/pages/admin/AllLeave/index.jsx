@@ -130,12 +130,16 @@ const AdminLeaveRequests = () => {
               setNewStatus("");
             }}
             className={`bg-yellow-500 text-white py-1 px-3 rounded text-xs font-semibold hover:bg-yellow-600 transition duration-150 ${
-              request.status === "Onaylandı" || request.status === "Reddedildi"
+              request.status === "Onaylandı" ||
+              request.status === "Reddedildi" ||
+              request.status === "Geçmiş İzin"
                 ? "opacity-50 cursor-not-allowed"
                 : ""
             }`}
             disabled={
-              request.status === "Onaylandı" || request.status === "Reddedildi"
+              request.status === "Onaylandı" ||
+              request.status === "Reddedildi" ||
+              request.status === "Geçmiş İzin"
             }
           >
             Güncelle
