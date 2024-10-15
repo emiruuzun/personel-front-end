@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { fetchMonthlyReport } from "../../../services/admin";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
-import { FaClock, FaUser, FaHourglass, FaCalendarAlt } from "react-icons/fa";
+import {
+  FaClock,
+  FaUser,
+  FaHourglass,
+  FaCalendarAlt,
+  FaSearch,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 
 function JobReport() {
   const [reportData, setReportData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [searchTerm, setSearchTerm] = useState("");
 
   const calculateWorkHours = (startTime, endTime) => {
     if (!startTime || !endTime) {
@@ -85,6 +93,7 @@ function JobReport() {
 
     return Object.values(summary);
   }, []);
+
   useEffect(() => {
     const fetchReport = async () => {
       try {
@@ -93,15 +102,17 @@ function JobReport() {
         if (data) {
           const groupedData = groupAndSummarizeData(data);
           setReportData(groupedData);
+          setFilteredData(groupedData);
         } else {
-          // Eğer `data` null veya undefined ise `reportData`'yı boş yap
           setReportData([]);
+          setFilteredData([]);
           toast.info("Gösterilecek rapor verisi yok.");
         }
       } catch (error) {
         console.error("Raporlama verisi çekilemedi:", error);
         toast.error("Raporlama verisi çekilemedi");
-        setReportData([]); // Hata durumunda veri sıfırlanmalı
+        setReportData([]);
+        setFilteredData([]);
       } finally {
         setLoading(false);
       }
@@ -109,6 +120,23 @@ function JobReport() {
 
     fetchReport();
   }, [groupAndSummarizeData, selectedMonth, selectedYear]);
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    if (value === "") {
+      setFilteredData(reportData);
+    } else {
+      const filtered = reportData.filter((record) =>
+        record.name.toLowerCase().includes(value)
+      );
+      setFilteredData(filtered);
+    }
+  };
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
 
   if (loading) {
     return (
@@ -151,7 +179,13 @@ function JobReport() {
                     "Kasım",
                     "Aralık",
                   ].map((month, index) => (
-                    <option key={index} value={index}>
+                    <option
+                      key={index}
+                      value={index}
+                      disabled={
+                        selectedYear === currentYear && index > currentMonth
+                      }
+                    >
                       {month}
                     </option>
                   ))}
@@ -161,20 +195,36 @@ function JobReport() {
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                   className="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {[...Array(5)].map((_, i) => {
-                    const year = new Date().getFullYear() - 2 + i;
+                  {[...Array(3)].map((_, i) => {
+                    const year = currentYear - 2 + i;
                     return (
-                      <option key={i} value={year}>
+                      <option
+                        key={i}
+                        value={year}
+                        disabled={year > currentYear}
+                      >
                         {year}
                       </option>
                     );
                   })}
                 </select>
               </div>
+              <div className="flex justify-center mb-6">
+                <div className="relative w-1/2 max-w-lg">
+                  <input
+                    type="text"
+                    placeholder="Personel adına göre ara..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full p-2 pl-10 pr-4 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150"
+                  />
+                  <FaSearch className="absolute top-2.5 left-3 text-gray-500" />
+                </div>
+              </div>
 
-              {reportData.length > 0 ? (
+              {filteredData.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {reportData.map((record, index) => (
+                  {filteredData.map((record, index) => (
                     <div
                       key={index}
                       className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
