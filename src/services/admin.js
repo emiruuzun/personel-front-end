@@ -560,3 +560,34 @@ export const getRecentActivities = async () => {
     throw new Error("API request failed");
   }
 };
+
+export const fetchMonthlyReport = async (month, year) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/admin/monthly-report?month=${month}&year=${year}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer: ${getCookie("access_token")}`,
+        },
+      }
+    );
+    const data = await response.json();
+
+    if (data.success) {
+      // Başarılı sonuçlarda başarı mesajı gösterebiliriz
+      toast.success("Aylık rapor başarıyla alındı.", { autoClose: 2000 });
+      console.log("Aylık Rapor Verileri:", data.data);
+      return data.data; // Veriyi döndürmek istersen
+    } else {
+      // Hata durumunda hata mesajı gösterebiliriz
+      toast.error(data.message || "Rapor alınamadı.");
+      console.error("Rapor alınamadı:", data.message);
+    }
+  } catch (error) {
+    // Genel bir hata mesajı gösterebiliriz
+    toast.error("API hatası: Rapor alınamadı.");
+    console.error("API hatası:", error);
+  }
+};

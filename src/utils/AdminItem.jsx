@@ -7,6 +7,7 @@ import {
   FaCalendarCheck,
   FaBullhorn,
   FaChartBar,
+  FaChartLine,
 } from "react-icons/fa";
 
 export const adminItem = [
@@ -69,6 +70,17 @@ export const adminItem = [
         slug: "admin/company-register",
         description: "Firma Kaydı",
         icon: FaBuilding,
+      },
+    ],
+  },
+  {
+    name: "Raporlama",
+    items: [
+      {
+        name: "Rapor Oluştur",
+        slug: "admin/job-reports",
+        description: "Aylık raporlama verilerini görüntüle",
+        icon: FaChartLine,
       },
     ],
   },
