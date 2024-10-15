@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { fetchMonthlyReport } from "../../../services/admin";
 import AdminDashboardlayout from "../../../layout/AdminDashboard";
-import { FaClock, FaUser, FaHourglass } from "react-icons/fa";
+import { FaClock, FaUser, FaHourglass, FaCalendarAlt } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 function JobReport() {
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // Çalışma saatlerini hesaplayan fonksiyon
   const calculateWorkHours = (startTime, endTime) => {
     if (!startTime || !endTime) {
-      return { hours: 0, minutes: 0 }; // Eğer mesai başlangıç veya bitiş saati boşsa, saat ve dakika 0 olarak döner
+      return { hours: 0, minutes: 0 };
     }
 
     const [startHour, startMinute] = startTime.split(":");
@@ -23,14 +24,13 @@ function JobReport() {
     const end = new Date();
     end.setHours(parseInt(endHour), parseInt(endMinute));
 
-    const diffMs = end - start; // Zaman farkı milisaniye olarak
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60)); // Saat cinsinden
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)); // Dakika cinsinden
+    const diffMs = end - start;
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
     return { hours: diffHrs, minutes: diffMins };
   };
 
-  // Verileri gruplandırıp özetleyen fonksiyon
   const groupAndSummarizeData = useCallback((data) => {
     const summary = {};
 
@@ -48,7 +48,6 @@ function JobReport() {
         };
       }
 
-      // Çalışma saatlerini ekle
       const { hours: workHours, minutes: workMinutes } = calculateWorkHours(
         record.job_start_time,
         record.job_end_time
@@ -56,7 +55,6 @@ function JobReport() {
       summary[personnelId].totalWorkHours += workHours;
       summary[personnelId].totalWorkMinutes += workMinutes;
 
-      // Mesai saatlerini ekle
       if (
         record.overtime_hours?.start_time &&
         record.overtime_hours?.end_time
@@ -71,16 +69,13 @@ function JobReport() {
       }
     });
 
-    // Dakikaları saatlere çevir
     Object.keys(summary).forEach((personnelId) => {
-      // Çalışma saatleri için
       const extraWorkHours = Math.floor(
         summary[personnelId].totalWorkMinutes / 60
       );
       summary[personnelId].totalWorkHours += extraWorkHours;
       summary[personnelId].totalWorkMinutes %= 60;
 
-      // Mesai saatleri için
       const extraOvertimeHours = Math.floor(
         summary[personnelId].totalOvertimeMinutes / 60
       );
@@ -88,91 +83,135 @@ function JobReport() {
       summary[personnelId].totalOvertimeMinutes %= 60;
     });
 
-    // Object.values ile summary'yi diziye çevir
     return Object.values(summary);
   }, []);
-
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const data = await fetchMonthlyReport(10, 2024); // Örnek olarak Ekim 2024 verisi
+        setLoading(true);
+        const data = await fetchMonthlyReport(selectedMonth + 1, selectedYear);
         if (data) {
-          const groupedData = groupAndSummarizeData(data); // Veriyi gruplandır ve özetle
-          setReportData(groupedData); // Veriyi state'e kaydet
+          const groupedData = groupAndSummarizeData(data);
+          setReportData(groupedData);
+        } else {
+          // Eğer `data` null veya undefined ise `reportData`'yı boş yap
+          setReportData([]);
+          toast.info("Gösterilecek rapor verisi yok.");
         }
       } catch (error) {
         console.error("Raporlama verisi çekilemedi:", error);
         toast.error("Raporlama verisi çekilemedi");
+        setReportData([]); // Hata durumunda veri sıfırlanmalı
       } finally {
         setLoading(false);
       }
     };
 
     fetchReport();
-  }, [groupAndSummarizeData]);
+  }, [groupAndSummarizeData, selectedMonth, selectedYear]);
 
   if (loading) {
-    return <div className="text-center mt-10">Yükleniyor...</div>;
+    return (
+      <AdminDashboardlayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </AdminDashboardlayout>
+    );
   }
 
   return (
     <AdminDashboardlayout>
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Aylık Raporlama
-        </h1>
-
-        <div className="bg-white shadow rounded-lg p-4">
-          {reportData.length > 0 ? (
-            <table className="min-w-full table-auto">
-              <thead>
-                <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                  <th className="py-3 px-6 text-left">Personel</th>
-                  <th className="py-3 px-6 text-center">
-                    Toplam Çalışma Saati
-                  </th>
-                  <th className="py-3 px-6 text-center">Toplam Mesai Saati</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-600 text-sm font-light">
-                {reportData.map((record, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-200 hover:bg-gray-100"
-                  >
-                    <td className="py-3 px-6 text-left whitespace-nowrap">
-                      <div className="flex items-center">
-                        <FaUser className="text-gray-500 mr-2" />
-                        <span className="font-medium">{record.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <div className="flex items-center justify-center">
-                        <FaClock className="text-gray-500 mr-2" />
-                        <span>
-                          {record.totalWorkHours} saat {record.totalWorkMinutes}{" "}
-                          dakika
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-6 text-center">
-                      <div className="flex items-center justify-center">
-                        <FaHourglass className="text-gray-500 mr-2" />
-                        <span>
-                          {record.totalOvertimeHours} saat{" "}
-                          {record.totalOvertimeMinutes} dakika
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-center text-gray-500">
-              Bu ay için rapor verisi bulunamadı.
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+              <h1 className="text-3xl font-bold text-white text-center">
+                Aylık Raporlama
+              </h1>
             </div>
-          )}
+            <div className="p-6">
+              <div className="flex justify-center space-x-4 mb-6">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {[
+                    "Ocak",
+                    "Şubat",
+                    "Mart",
+                    "Nisan",
+                    "Mayıs",
+                    "Haziran",
+                    "Temmuz",
+                    "Ağustos",
+                    "Eylül",
+                    "Ekim",
+                    "Kasım",
+                    "Aralık",
+                  ].map((month, index) => (
+                    <option key={index} value={index}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {[...Array(5)].map((_, i) => {
+                    const year = new Date().getFullYear() - 2 + i;
+                    return (
+                      <option key={i} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {reportData.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {reportData.map((record, index) => (
+                    <div
+                      key={index}
+                      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                    >
+                      <div className="flex items-center mb-4">
+                        <FaUser className="text-blue-500 mr-3 text-xl" />
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {record.name}
+                        </h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <FaClock className="text-green-500 mr-2" />
+                          <span className="text-gray-600">
+                            Çalışma: {record.totalWorkHours} saat{" "}
+                            {record.totalWorkMinutes} dk
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaHourglass className="text-orange-500 mr-2" />
+                          <span className="text-gray-600">
+                            Mesai: {record.totalOvertimeHours} saat{" "}
+                            {record.totalOvertimeMinutes} dk
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <FaCalendarAlt className="text-6xl mx-auto mb-4 text-blue-500" />
+                  <p className="text-xl">Bu ay için rapor verisi bulunamadı.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </AdminDashboardlayout>

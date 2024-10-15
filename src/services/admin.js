@@ -582,12 +582,14 @@ export const fetchMonthlyReport = async (month, year) => {
       return data.data; // Veriyi döndürmek istersen
     } else {
       // Hata durumunda hata mesajı gösterebiliriz
-      toast.error(data.message || "Rapor alınamadı.");
+
       console.error("Rapor alınamadı:", data.message);
+      return null;
     }
   } catch (error) {
     // Genel bir hata mesajı gösterebiliriz
     toast.error("API hatası: Rapor alınamadı.");
     console.error("API hatası:", error);
+    return null;
   }
 };
