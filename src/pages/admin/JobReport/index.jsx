@@ -17,7 +17,6 @@ function JobReport() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState("");
-
   const calculateWorkHours = (startTime, endTime) => {
     if (!startTime || !endTime) {
       return { hours: 0, minutes: 0 };
@@ -33,8 +32,13 @@ function JobReport() {
     end.setHours(parseInt(endHour), parseInt(endMinute));
 
     const diffMs = end - start;
-    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    let diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+    let diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    // Eğer başlangıç saati 13:00'den önce ve bitiş saati 12:00'den sonra ise 1 saat yemek molası çıkarıyoruz
+    if (parseInt(startHour) < 13 && parseInt(endHour) > 12) {
+      diffHrs -= 1; // 1 saat yemek molası çıkarılıyor
+    }
 
     return { hours: diffHrs, minutes: diffMins };
   };

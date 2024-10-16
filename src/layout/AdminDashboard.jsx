@@ -14,6 +14,7 @@ import {
   FaBullhorn,
   FaHome,
   FaTimes,
+  FaFileAlt,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,6 +26,7 @@ const categoryIcons = {
   "Firma Yönetimi": FaBuilding,
   Analizler: FaChartBar,
   İletişim: FaBullhorn,
+  Raporlama: FaFileAlt,
 };
 
 function AdminDashboardLayout({ children }) {
