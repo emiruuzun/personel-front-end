@@ -62,6 +62,7 @@ function JobReport() {
       const personnelId = record.personnel_id?._id;
       const personnelName = record.personnel_id?.name || "Bilinmiyor";
       const personnelGroup = record.personnel_id?.group || "Grup Yok";
+      const personnelLeaveDays = record.personnel_id?.leaveDays || 0; // İzin günleri
 
       if (!summary[personnelId]) {
         summary[personnelId] = {
@@ -71,6 +72,7 @@ function JobReport() {
           totalWorkMinutes: 0,
           totalOvertimeHours: 0,
           totalOvertimeMinutes: 0,
+          leaveDays: personnelLeaveDays, // İzin günlerini ekliyoruz
         };
       }
 
@@ -292,6 +294,12 @@ function JobReport() {
                           <span className="text-gray-600">
                             Mesai: {record.totalOvertimeHours} saat{" "}
                             {record.totalOvertimeMinutes} dk
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaCalendarAlt className="text-red-500 mr-2" />
+                          <span className="text-gray-600">
+                            İzinli: {record.leaveDays} gün
                           </span>
                         </div>
                       </div>
