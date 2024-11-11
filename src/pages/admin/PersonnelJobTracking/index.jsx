@@ -558,13 +558,19 @@ function PersonnelJobTrackingPage() {
                                 <FaEdit size={18} />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleUnassignPersonnel(
-                                    activeCompany,
-                                    person.id,
-                                    person.recordId
-                                  )
-                                }
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      "Personeli çıkarmak istediğinizden emin misiniz?"
+                                    )
+                                  ) {
+                                    handleUnassignPersonnel(
+                                      activeCompany,
+                                      person.id,
+                                      person.recordId
+                                    );
+                                  }
+                                }}
                                 className="text-red-500 hover:text-red-700"
                                 title="Personeli Çıkar"
                               >

@@ -17,6 +17,19 @@ function JobReport() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("Tümü");
+
+  const groups = [
+    "Tümü",
+    "Mekanik",
+    "Boru",
+    "Elektrik",
+    "Aksaray",
+    "Kapı",
+    "Ofis",
+    "Taşeron",
+  ];
+
   const calculateWorkHours = (startTime, endTime) => {
     if (!startTime || !endTime) {
       return { hours: 0, minutes: 0 };
@@ -35,9 +48,8 @@ function JobReport() {
     let diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
     let diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
-    // Eğer başlangıç saati 13:00'den önce ve bitiş saati 12:00'den sonra ise 1 saat yemek molası çıkarıyoruz
     if (parseInt(startHour) < 13 && parseInt(endHour) > 12) {
-      diffHrs -= 1; // 1 saat yemek molası çıkarılıyor
+      diffHrs -= 1;
     }
 
     return { hours: diffHrs, minutes: diffMins };
@@ -49,10 +61,12 @@ function JobReport() {
     data.forEach((record) => {
       const personnelId = record.personnel_id?._id;
       const personnelName = record.personnel_id?.name || "Bilinmiyor";
+      const personnelGroup = record.personnel_id?.group || "Grup Yok";
 
       if (!summary[personnelId]) {
         summary[personnelId] = {
           name: personnelName,
+          group: personnelGroup,
           totalWorkHours: 0,
           totalWorkMinutes: 0,
           totalOvertimeHours: 0,
@@ -129,14 +143,29 @@ function JobReport() {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
 
-    if (value === "") {
-      setFilteredData(reportData);
-    } else {
-      const filtered = reportData.filter((record) =>
-        record.name.toLowerCase().includes(value)
+    filterData(value, selectedGroup);
+  };
+
+  const filterData = (searchTerm, group) => {
+    let filtered = reportData;
+
+    if (searchTerm) {
+      filtered = filtered.filter((record) =>
+        record.name.toLowerCase().includes(searchTerm)
       );
-      setFilteredData(filtered);
     }
+
+    if (group !== "Tümü") {
+      filtered = filtered.filter((record) => record.group === group);
+    }
+
+    setFilteredData(filtered);
+  };
+
+  const handleGroupChange = (e) => {
+    const group = e.target.value;
+    setSelectedGroup(group);
+    filterData(searchTerm, group);
   };
 
   const currentYear = new Date().getFullYear();
@@ -211,6 +240,17 @@ function JobReport() {
                       </option>
                     );
                   })}
+                </select>
+                <select
+                  value={selectedGroup}
+                  onChange={handleGroupChange}
+                  className="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {groups.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex justify-center mb-6">
