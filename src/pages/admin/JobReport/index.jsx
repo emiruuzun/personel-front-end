@@ -62,7 +62,12 @@ function JobReport() {
       const personnelId = record.personnel_id?._id;
       const personnelName = record.personnel_id?.name || "Bilinmiyor";
       const personnelGroup = record.personnel_id?.group || "Grup Yok";
-      const personnelLeaveDays = record.personnel_id?.leaveDays || 0; // İzin günleri
+      const personnelLeaveDays = record.personnel_id?.leaveDays || 0;
+      const totalWorkingDays = record.personnel_id?.totalWorkingDays || 0;
+      const totalWorkingWeekdays =
+        record.personnel_id?.totalWorkingWeekdays || 0;
+      const totalWorkingWeekends =
+        record.personnel_id?.totalWorkingWeekends || 0;
 
       if (!summary[personnelId]) {
         summary[personnelId] = {
@@ -72,7 +77,10 @@ function JobReport() {
           totalWorkMinutes: 0,
           totalOvertimeHours: 0,
           totalOvertimeMinutes: 0,
-          leaveDays: personnelLeaveDays, // İzin günlerini ekliyoruz
+          leaveDays: personnelLeaveDays,
+          totalWorkingDays, // Toplam çalışma günleri
+          totalWorkingWeekdays, // Hafta içi çalışma günleri
+          totalWorkingWeekends, // Hafta sonu çalışma günleri
         };
       }
 
@@ -300,6 +308,24 @@ function JobReport() {
                           <FaCalendarAlt className="text-red-500 mr-2" />
                           <span className="text-gray-600">
                             İzinli: {record.leaveDays} gün
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaCalendarAlt className="text-indigo-500 mr-2" />
+                          <span className="text-gray-600">
+                            Çalışma Günleri: {record.totalWorkingDays} gün
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaCalendarAlt className="text-blue-500 mr-2" />
+                          <span className="text-gray-600">
+                            Hafta İçi: {record.totalWorkingWeekdays} gün
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <FaCalendarAlt className="text-purple-500 mr-2" />
+                          <span className="text-gray-600">
+                            Hafta Sonu: {record.totalWorkingWeekends} gün
                           </span>
                         </div>
                       </div>
