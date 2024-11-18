@@ -593,3 +593,30 @@ export const fetchMonthlyReport = async (month, year) => {
     return null;
   }
 };
+
+export const createLeaveAPI = async (leaveData) => {
+  try {
+    const apiRequest = await fetch(`${API_BASE_URL}/admin/leave/leave-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer: ${getCookie("access_token")}`,
+      },
+      body: JSON.stringify(leaveData),
+    });
+
+    const data = await apiRequest.json();
+
+    if (data.success) {
+      toast.success("İzin başarıyla oluşturuldu.", { autoClose: 2000 });
+    } else {
+      toast.error(data.message || "İzin oluşturulurken bir hata oluştu.");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API request failed:", error);
+    toast.error("İzin oluşturulurken bir hata oluştu.");
+    throw new Error("API request failed");
+  }
+};
