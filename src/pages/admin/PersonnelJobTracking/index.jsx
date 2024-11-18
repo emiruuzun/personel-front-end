@@ -61,6 +61,44 @@ function PersonnelJobTrackingPage() {
 
   registerLocale("tr", tr);
 
+  // İzinli ve atanabilir personeli ayıran fonksiyon
+  const separatePersonnelByLeaveStatus = useCallback(() => {
+    const { activePersonnel, onLeavePersonnel } = allPersonnelWithLeave.reduce(
+      (acc, person) => {
+        // Kişinin seçili tarihte izinli olup olmadığını kontrol et
+        const isOnLeave = allLeaves.some(
+          (leave) =>
+            leave.userId._id === person.id &&
+            new Date(leave.startDate) <= selectedDate &&
+            new Date(leave.endDate) >= selectedDate
+        );
+
+        if (isOnLeave) {
+          // İzinli personel listesine ekle
+          const leaveInfo = allLeaves.find(
+            (leave) =>
+              leave.userId._id === person.id &&
+              new Date(leave.startDate) <= selectedDate &&
+              new Date(leave.endDate) >= selectedDate
+          );
+          acc.onLeavePersonnel.push({
+            ...person,
+            leaveInfo,
+          });
+        } else {
+          // Aktif personel listesine ekle
+          acc.activePersonnel.push(person);
+        }
+
+        return acc;
+      },
+      { activePersonnel: [], onLeavePersonnel: [] }
+    );
+
+    setInactivePersonnel(onLeavePersonnel);
+    setUnassignedPersonnel(activePersonnel);
+  }, [selectedDate, allPersonnelWithLeave, allLeaves]);
+
   const fetchAllPersonnelWithLeave = async () => {
     try {
       const response = await getAllUsers();
@@ -93,38 +131,10 @@ function PersonnelJobTrackingPage() {
       const formattedDate = selectedDate.toISOString().split("T")[0];
       const response = await getDailyWorkRecords(formattedDate);
       if (response.success) {
-        const assignedPersonnel = response.data.assigned.map((record) => ({
-          id: record.personnel_id?._id,
-          name: record.personnel_id?.name,
-          jobStartTime: record.job_start_time,
-          jobEndTime: record.job_end_time,
-          overtimeHours: record.overtime_hours || {
-            start_time: "",
-            end_time: "",
-          },
-          company_id: record.company_id,
-          recordId: record._id,
-        }));
-
-        const assignedPersonnelIds = assignedPersonnel.map((p) => p.id);
-        const unassignedPersonnelData = allPersonnelWithLeave.filter(
-          (person) => {
-            const isAssigned = assignedPersonnelIds.includes(person.id);
-            const isOnLeave =
-              person.status === "İzinli" &&
-              person.leaveStartDate &&
-              person.leaveEndDate &&
-              new Date(person.leaveStartDate) <= new Date(selectedDate) &&
-              new Date(person.leaveEndDate) >= new Date(selectedDate);
-            return !isAssigned && !isOnLeave;
-          }
-        );
-        setUnassignedPersonnel(unassignedPersonnelData);
-
         setCompanies((prevCompanies) =>
           prevCompanies.map((company) => ({
             ...company,
-            personnel: assignedPersonnel.filter(
+            personnel: response.data.assigned.filter(
               (person) => person.company_id === company.id
             ),
           }))
@@ -135,8 +145,20 @@ function PersonnelJobTrackingPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [allPersonnelWithLeave, selectedDate]);
+  }, [selectedDate]);
 
+  const fetchAllLeaves = async () => {
+    try {
+      const response = await getAllLeave();
+      if (response.success) {
+        setAllLeaves(response.data);
+      } else {
+        console.error("İzin bilgileri alınamadı.");
+      }
+    } catch (error) {
+      console.error("İzin bilgileri alınırken bir hata oluştu:", error);
+    }
+  };
   const fetchCompanies = async () => {
     try {
       const response = await getAllCompanies();
@@ -190,74 +212,21 @@ function PersonnelJobTrackingPage() {
   }, [activeCompany]);
 
   useEffect(() => {
+    if (allPersonnelWithLeave.length > 0 && allLeaves.length > 0) {
+      separatePersonnelByLeaveStatus();
+    }
+  }, [
+    selectedDate,
+    allPersonnelWithLeave,
+    allLeaves,
+    separatePersonnelByLeaveStatus,
+  ]);
+
+  useEffect(() => {
     if (allPersonnelWithLeave.length > 0) {
       fetchDailyWorkRecords();
     }
   }, [fetchDailyWorkRecords, allPersonnelWithLeave, selectedDate]);
-  const fetchAllLeaves = async () => {
-    try {
-      const response = await getAllLeave(); // getAllLeave endpointini çağırıyoruz
-      if (response.success) {
-        setAllLeaves(response.data); // Tüm izin bilgilerini state'e kaydediyoruz
-      } else {
-        console.error("İzin bilgileri alınamadı.");
-      }
-    } catch (error) {
-      console.error("İzin bilgileri alınırken bir hata oluştu:", error);
-    }
-  };
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsLoading(true);
-      await fetchCompanies();
-      await fetchAllPersonnelWithLeave();
-      await fetchAllLeaves(); // Yeni izin bilgilerini alıyoruz
-      setIsLoading(false);
-    };
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    const filterPersonnel = () => {
-      // Atanabilir personel filtresi
-      const assignablePersonnel = allPersonnelWithLeave.filter((person) => {
-        const isActive =
-          person.status === "Aktif" ||
-          person.status === "Onaylanmış (Yaklaşan)";
-
-        const isNotOnLeave = !allLeaves.some((leave) => {
-          // Kullanıcı aynı ise ve tarihler çakışıyorsa izinli
-          return (
-            leave.userId._id === person.id &&
-            new Date(leave.startDate) <= selectedDate &&
-            new Date(leave.endDate) > selectedDate // Tarih çakışması kontrolü
-          );
-        });
-
-        return isActive && isNotOnLeave;
-      });
-
-      // İzinli personel filtresi
-      const inactivePersonnel = allPersonnelWithLeave.filter((person) => {
-        const isOnLeave = allLeaves.some((leave) => {
-          // Kullanıcı aynı ise ve tarihler çakışıyorsa izinli
-          return (
-            leave.userId._id === person.id &&
-            new Date(leave.startDate) <= selectedDate &&
-            new Date(leave.endDate) > selectedDate // Tarih çakışması kontrolü
-          );
-        });
-
-        return isOnLeave;
-      });
-
-      setUnassignedPersonnel(assignablePersonnel); // Atanabilir personel listesi
-      setInactivePersonnel(inactivePersonnel); // İzinli personel listesi
-    };
-
-    filterPersonnel();
-  }, [selectedDate, allPersonnelWithLeave, allLeaves]);
 
   const openAssignModal = (person) => {
     setSelectedPersonnelForAssignment(person);
@@ -349,21 +318,29 @@ function PersonnelJobTrackingPage() {
             : company
         )
       );
-      setUnassignedPersonnel((prev) => [
-        ...prev,
-        {
-          id: personnelToUnassign.id,
-          name: personnelToUnassign.name,
-        },
-      ]);
+
+      const isPersonOnLeave = allLeaves.some(
+        (leave) =>
+          leave.userId._id === personnelId &&
+          new Date(leave.startDate) <= selectedDate &&
+          new Date(leave.endDate) >= selectedDate
+      );
+
+      if (!isPersonOnLeave) {
+        setUnassignedPersonnel((prev) => [
+          ...prev,
+          {
+            id: personnelToUnassign.id,
+            name: personnelToUnassign.name,
+          },
+        ]);
+      }
 
       await deleteDailyWorkRecord(dailyRecordId);
 
       console.log("Personel başarıyla atamadan çıkarıldı ve kayıt silindi.");
     } catch (error) {
       console.error("Personel atamadan çıkarılırken bir hata oluştu:", error);
-      setCompanies((prevCompanies) => [...prevCompanies]);
-      setUnassignedPersonnel((prev) => [...prev]);
       alert(
         "Personel atamadan çıkarılırken bir hata oluştu. Lütfen tekrar deneyin."
       );
@@ -486,13 +463,24 @@ function PersonnelJobTrackingPage() {
     }
   };
 
-  const filteredPersonnel = unassignedPersonnel
-    .filter(
-      (person) => selectedGroup === "Tümü" || person.group === selectedGroup
-    )
-    .filter((person) =>
-      person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtreleme mantığını güncelle
+  const filteredPersonnel = unassignedPersonnel.filter((person) => {
+    // Önce grup filtresini uygula
+    const groupMatch =
+      selectedGroup === "Tümü" || person.group === selectedGroup;
+
+    // Sonra arama filtresini uygula
+    const searchMatch = person.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // İzinli olup olmadığını kontrol et
+    const isNotOnLeave = !inactivePersonnel.some(
+      (leavePerson) => leavePerson.id === person.id
     );
+
+    return groupMatch && searchMatch && isNotOnLeave;
+  });
 
   if (isLoading) {
     return (
@@ -524,6 +512,7 @@ function PersonnelJobTrackingPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
+          {/* Firma Listesi */}
           <div className="w-full lg:w-1/4 bg-white rounded-lg shadow-lg p-4 h-auto lg:h-[calc(100vh-200px)] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4 text-gray-700 flex items-center">
               <FaBuilding className="mr-2" /> Firmalar
@@ -549,6 +538,7 @@ function PersonnelJobTrackingPage() {
           </div>
 
           <div className="w-full lg:w-3/4 space-y-6">
+            {/* Atanmış Personel */}
             <div className="bg-white rounded-lg shadow-lg p-4">
               {activeCompany && (
                 <div>
@@ -624,6 +614,7 @@ function PersonnelJobTrackingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6">
+              {/* Atanabilir Personel */}
               <div className="w-full sm:w-1/2 bg-white rounded-lg shadow-lg p-4">
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserPlus className="mr-2" /> Atanabilir Personel
@@ -669,6 +660,8 @@ function PersonnelJobTrackingPage() {
                   ))}
                 </div>
               </div>
+
+              {/* İzinli Personel */}
               <div className="w-full sm:w-1/2 bg-white rounded-lg shadow-lg p-4">
                 <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
                   <FaUserMinus className="mr-2" /> İzinli Personel
@@ -682,30 +675,20 @@ function PersonnelJobTrackingPage() {
                       <span className="font-medium text-indigo-600">
                         {person.name}
                       </span>
-                      {person.leaveStartDate && person.leaveEndDate ? (
+                      {person.leaveInfo && (
                         <div className="text-sm text-gray-600 mt-1">
                           <span className="block">
                             İzin Başlangıcı:{" "}
-                            {new Date(person.leaveStartDate).toLocaleDateString(
-                              "tr-TR"
-                            )}
+                            {new Date(
+                              person.leaveInfo.startDate
+                            ).toLocaleDateString("tr-TR")}
                           </span>
                           <span className="block">
                             İzin Bitişi:{" "}
-                            {new Date(person.leaveEndDate).toLocaleDateString(
-                              "tr-TR"
-                            )}
+                            {new Date(
+                              person.leaveInfo.endDate
+                            ).toLocaleDateString("tr-TR")}
                           </span>
-                          {person.assignedAfterLeaveInfo && (
-                            <div className="mt-2 text-blue-600">
-                              <strong>İş Dönüşü Planlanan İş: </strong>
-                              {person.assignedAfterLeaveInfo}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-red-500 mt-1">
-                          İzin bilgisi bulunamadı.
                         </div>
                       )}
                     </div>
@@ -716,6 +699,7 @@ function PersonnelJobTrackingPage() {
           </div>
         </div>
 
+        {/* Kaydet Butonu */}
         <div className="fixed bottom-4 right-4">
           <button
             onClick={handleSaveAllAssignments}
@@ -724,168 +708,171 @@ function PersonnelJobTrackingPage() {
             <FaSave className="mr-2" /> Kaydet
           </button>
         </div>
-      </div>
 
-      {showAssignModal && selectedPersonnelForAssignment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">
-                {selectedPersonnelForAssignment.name} için İş Başlangıç Saati
-              </h3>
-              <button
-                onClick={closeAssignModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes size={24} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  İş Seçin
-                </label>
-                <select
-                  value={selectedJob}
-                  onChange={(e) => setSelectedJob(e.target.value)}
-                  className="w-full p-2 border rounded"
+        {/* Modals */}
+        {/* Atama Modal */}
+        {showAssignModal && selectedPersonnelForAssignment && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">
+                  {selectedPersonnelForAssignment.name} için İş Başlangıç Saati
+                </h3>
+                <button
+                  onClick={closeAssignModal}
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  <option value="" disabled>
+                  <FaTimes size={24} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     İş Seçin
-                  </option>
-                  {jobs.map((job) => (
-                    <option key={job._id} value={job._id}>
-                      {job.jobName}
+                  </label>
+                  <select
+                    value={selectedJob}
+                    onChange={(e) => setSelectedJob(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="" disabled>
+                      İş Seçin
                     </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  İş Başlangıç Saati
-                </label>
-                <input
-                  type="time"
-                  value={assignmentJobStartTime}
-                  onChange={(e) => setAssignmentJobStartTime(e.target.value)}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-2">
-              <button
-                onClick={handleConfirmAssignPersonnel}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Ata
-              </button>
-              <button
-                onClick={closeAssignModal}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                İptal
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showEditModal && editingPerson && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">
-                {editingPerson.name} için Çalışma Saatleri
-              </h3>
-              <button
-                onClick={closeEditModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes size={24} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  İş Başlangıç Saati
-                </label>
-                <input
-                  type="time"
-                  value={editingPerson.jobStartTime || ""}
-                  disabled
-                  className="w-full p-2 border rounded bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  İş Bitiş Saati
-                </label>
-                <input
-                  type="time"
-                  value={editingPerson.jobEndTime || ""}
-                  onChange={(e) =>
-                    setEditingPerson({
-                      ...editingPerson,
-                      jobEndTime: e.target.value,
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mesai Saatleri
-                </label>
-                <div className="flex space-x-2">
+                    {jobs.map((job) => (
+                      <option key={job._id} value={job._id}>
+                        {job.jobName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    İş Başlangıç Saati
+                  </label>
                   <input
                     type="time"
-                    value={editingPerson.overtimeHours?.startTime || ""}
-                    onChange={(e) =>
-                      setEditingPerson({
-                        ...editingPerson,
-                        overtimeHours: {
-                          ...editingPerson.overtimeHours,
-                          startTime: e.target.value,
-                        },
-                      })
-                    }
-                    className="flex-1 p-2 border rounded"
-                  />
-                  <span className="self-center">-</span>
-                  <input
-                    type="time"
-                    value={editingPerson.overtimeHours?.endTime || ""}
-                    onChange={(e) =>
-                      setEditingPerson({
-                        ...editingPerson,
-                        overtimeHours: {
-                          ...editingPerson.overtimeHours,
-                          endTime: e.target.value,
-                        },
-                      })
-                    }
-                    className="flex-1 p-2 border rounded"
+                    value={assignmentJobStartTime}
+                    onChange={(e) => setAssignmentJobStartTime(e.target.value)}
+                    className="w-full p-2 border rounded"
                   />
                 </div>
               </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-2">
-              <button
-                onClick={handleUpdatePersonnelTime}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Kaydet
-              </button>
-              <button
-                onClick={closeEditModal}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                İptal
-              </button>
+              <div className="mt-6 flex justify-end space-x-2">
+                <button
+                  onClick={handleConfirmAssignPersonnel}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Ata
+                </button>
+                <button
+                  onClick={closeAssignModal}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  İptal
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Düzenleme Modal */}
+        {showEditModal && editingPerson && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">
+                  {editingPerson.name} için Çalışma Saatleri
+                </h3>
+                <button
+                  onClick={closeEditModal}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes size={24} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    İş Başlangıç Saati
+                  </label>
+                  <input
+                    type="time"
+                    value={editingPerson.jobStartTime || ""}
+                    disabled
+                    className="w-full p-2 border rounded bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    İş Bitiş Saati
+                  </label>
+                  <input
+                    type="time"
+                    value={editingPerson.jobEndTime || ""}
+                    onChange={(e) =>
+                      setEditingPerson({
+                        ...editingPerson,
+                        jobEndTime: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mesai Saatleri
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="time"
+                      value={editingPerson.overtimeHours?.startTime || ""}
+                      onChange={(e) =>
+                        setEditingPerson({
+                          ...editingPerson,
+                          overtimeHours: {
+                            ...editingPerson.overtimeHours,
+                            startTime: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 p-2 border rounded"
+                    />
+                    <span className="self-center">-</span>
+                    <input
+                      type="time"
+                      value={editingPerson.overtimeHours?.endTime || ""}
+                      onChange={(e) =>
+                        setEditingPerson({
+                          ...editingPerson,
+                          overtimeHours: {
+                            ...editingPerson.overtimeHours,
+                            endTime: e.target.value,
+                          },
+                        })
+                      }
+                      className="flex-1 p-2 border rounded"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-2">
+                <button
+                  onClick={handleUpdatePersonnelTime}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Kaydet
+                </button>
+                <button
+                  onClick={closeEditModal}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  İptal
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </AdminDashboardlayout>
   );
 }
