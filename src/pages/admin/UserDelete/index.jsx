@@ -16,6 +16,9 @@ import {
   FaUsers,
   FaUserClock,
   FaInfoCircle,
+  FaBriefcase,
+  FaIdCard,
+  FaPhone,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -159,73 +162,6 @@ function GetAllUsers() {
     }
   };
 
-  const UserCard = ({ user }) => (
-    <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 mb-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-            <FaUser className="w-6 h-6 text-gray-500" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
-            <p className="text-sm text-gray-600">{user.email}</p>
-          </div>
-        </div>
-        <div>
-          {user.isVerify ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-              <FaCheck className="w-4 h-4 mr-1" />
-              Verified
-            </span>
-          ) : (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-              <FaTimes className="w-4 h-4 mr-1" />
-              Not Verified
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-        <button
-          onClick={() => setSelectedUser(user)}
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          <FaInfoCircle className="w-4 h-4 mr-2" />
-          Detaylar
-        </button>
-        <button
-          onClick={() => handleOpenLeaveModal(user)}
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          <FaUserClock className="w-4 h-4 mr-2" />
-          İzin Oluştur
-        </button>
-        <button
-          onClick={() => handleShowDelete(user._id)}
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-        >
-          <FaTrash className="w-4 h-4 mr-2" />
-          Sil
-        </button>
-      </div>
-    </div>
-  );
-
-  const StatsCard = ({ icon: Icon, title, value, bgColor, textColor }) => (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center">
-        <div className={`rounded-lg ${bgColor} ${textColor} p-3`}>
-          <Icon className="w-6 h-6" />
-        </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-
   const filteredUsers = users.filter((user) => {
     const groupMatch = selectedGroup === "Tümü" || user.group === selectedGroup;
     const searchMatch =
@@ -236,52 +172,101 @@ function GetAllUsers() {
 
   return (
     <AdminDashboardlayout>
-      <div className="min-h-screen bg-gray-50 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Header Section */}
+        <div className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Personel Yönetimi
             </h1>
             <p className="mt-2 text-gray-600">
-              Tüm personel bilgilerini yönetin ve izleyin
+              Tüm personel bilgilerini tek noktadan yönetin
             </p>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
-            <StatsCard
-              icon={FaUsers}
-              title="Toplam Personel"
-              value={stats.totalUsers}
-              bgColor="bg-blue-100"
-              textColor="text-blue-600"
-            />
-            <StatsCard
-              icon={FaUser}
-              title="Aktif Personel"
-              value={stats.activeUsers}
-              bgColor="bg-green-100"
-              textColor="text-green-600"
-            />
-            <StatsCard
-              icon={FaUserClock}
-              title="İzindeki Personel"
-              value={stats.onLeaveUsers}
-              bgColor="bg-yellow-100"
-              textColor="text-yellow-600"
-            />
-            <StatsCard
-              icon={FaInfoCircle}
-              title="Onay Bekleyen"
-              value={stats.pendingVerification}
-              bgColor="bg-red-100"
-              textColor="text-red-600"
-            />
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="bg-blue-100 rounded-2xl p-4">
+                    <FaUsers className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">
+                      Toplam Personel
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.totalUsers}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-1" />
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="bg-green-100 rounded-2xl p-4">
+                    <FaUser className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">
+                      Aktif Personel
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.activeUsers}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-green-500 to-green-600 h-1" />
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="bg-yellow-100 rounded-2xl p-4">
+                    <FaUserClock className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">
+                      İzindeki Personel
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.onLeaveUsers}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-1" />
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="bg-red-100 rounded-2xl p-4">
+                    <FaInfoCircle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">
+                      Onay Bekleyen
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {stats.pendingVerification}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-red-500 to-red-600 h-1" />
+            </div>
           </div>
 
-          {/* Search and Filter */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -291,7 +276,7 @@ function GetAllUsers() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="İsim veya email ile ara..."
                 />
               </div>
@@ -299,7 +284,7 @@ function GetAllUsers() {
                 <select
                   value={selectedGroup}
                   onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
+                  className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {groups.map((group) => (
                     <option key={group} value={group}>
@@ -311,15 +296,71 @@ function GetAllUsers() {
             </div>
           </div>
 
-          {/* User Grid */}
+          {/* User Cards Grid */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredUsers.map((user) => (
-                <UserCard key={user._id} user={user} />
+                <div
+                  key={user._id}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-3">
+                          <FaUser className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {user.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">{user.email}</p>
+                        </div>
+                      </div>
+                      <div>
+                        {user.isVerify ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <FaCheck className="w-4 h-4 mr-1" />
+                            Onaylı
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <FaTimes className="w-4 h-4 mr-1" />
+                            Onaysız
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setSelectedUser(user)}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                      >
+                        <FaInfoCircle className="w-4 h-4 mr-2" />
+                        Detaylar
+                      </button>
+                      <button
+                        onClick={() => handleOpenLeaveModal(user)}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                      >
+                        <FaUserClock className="w-4 h-4 mr-2" />
+                        İzin Oluştur
+                      </button>
+                      <button
+                        onClick={() => handleShowDelete(user._id)}
+                        className="w-full inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transition-all duration-300"
+                      >
+                        <FaTrash className="w-4 h-4 mr-2" />
+                        Sil
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -332,19 +373,19 @@ function GetAllUsers() {
             onOpenChange={handleCloseLeaveModal}
           >
             <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-white rounded-xl shadow-2xl p-6">
-              <Dialog.Title className="text-lg font-semibold mb-4">
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-white rounded-2xl shadow-2xl p-6">
+              <Dialog.Title className="text-xl font-semibold mb-4 text-gray-900">
                 {leaveUser.name} için İzin Oluştur
               </Dialog.Title>
               <form onSubmit={handleSubmitLeave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     İzin Türü
                   </label>
                   <select
                     name="leaveType"
                     required
-                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="Yıllık İzin">Yıllık İzin</option>
                     <option value="Hastalık İzni">Hastalık İzni</option>
@@ -354,14 +395,14 @@ function GetAllUsers() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Başlangıç Tarihi
                     </label>
                     <input
                       name="startDate"
                       type="date"
                       required
-                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onChange={(e) => {
                         const endDate = e.target.form.endDate.value;
                         if (endDate) {
@@ -373,14 +414,14 @@ function GetAllUsers() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Bitiş Tarihi
                     </label>
                     <input
                       name="endDate"
                       type="date"
                       required
-                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onChange={(e) => {
                         const startDate = e.target.form.startDate.value;
                         if (startDate) {
@@ -394,7 +435,7 @@ function GetAllUsers() {
                 </div>
 
                 {leaveDays > 0 && (
-                  <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="bg-blue-50 rounded-xl p-4">
                     <div className="flex items-center">
                       <FaCalendarAlt className="h-5 w-5 text-blue-500 mr-2" />
                       <p className="text-blue-700 font-medium">
@@ -406,14 +447,14 @@ function GetAllUsers() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     İzin Nedeni
                   </label>
                   <textarea
                     name="reason"
                     required
                     rows={3}
-                    className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="İzin alma nedeninizi açıklayın..."
                   />
                 </div>
@@ -422,14 +463,14 @@ function GetAllUsers() {
                   <button
                     type="button"
                     onClick={handleCloseLeaveModal}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300"
                   >
                     <FaTimes className="h-4 w-4 mr-2" />
                     İptal
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300"
                   >
                     <FaCheck className="h-4 w-4 mr-2" />
                     Kaydet
@@ -447,9 +488,9 @@ function GetAllUsers() {
             onOpenChange={() => setSelectedUser(null)}
           >
             <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-white rounded-xl shadow-2xl p-6">
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md bg-white rounded-2xl shadow-2xl p-6">
               <div className="mb-6">
-                <Dialog.Title className="text-lg font-semibold text-gray-900">
+                <Dialog.Title className="text-xl font-semibold text-gray-900">
                   Kullanıcı Detayları
                 </Dialog.Title>
                 <p className="mt-1 text-sm text-gray-500">
@@ -458,39 +499,59 @@ function GetAllUsers() {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">Durum</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedUser.status}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <FaBriefcase className="h-5 w-5 text-gray-500 mr-2" />
+                    <div>
+                      <p className="text-sm text-gray-500">Durum</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedUser.status}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">Pozisyon</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedUser.position}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <FaUser className="h-5 w-5 text-gray-500 mr-2" />
+                    <div>
+                      <p className="text-sm text-gray-500">Pozisyon</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedUser.position}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">TC Kimlik No</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedUser.tcNo}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <FaIdCard className="h-5 w-5 text-gray-500 mr-2" />
+                    <div>
+                      <p className="text-sm text-gray-500">TC Kimlik No</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedUser.tcNo}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">İletişim</p>
-                  <p className="font-medium text-gray-900">
-                    {selectedUser.contact}
-                  </p>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <FaPhone className="h-5 w-5 text-gray-500 mr-2" />
+                    <div>
+                      <p className="text-sm text-gray-500">İletişim</p>
+                      <p className="font-medium text-gray-900">
+                        {selectedUser.contact}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="mt-6">
                 <button
                   onClick={() => setSelectedUser(null)}
-                  className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="w-full inline-flex justify-center items-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-300"
                 >
                   <FaTimes className="h-4 w-4 mr-2" />
                   Kapat
@@ -507,12 +568,12 @@ function GetAllUsers() {
             onOpenChange={handleCloseDeleteConfirm}
           >
             <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-sm bg-white rounded-xl shadow-2xl p-6">
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-sm bg-white rounded-2xl shadow-2xl p-6">
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                   <FaTrash className="h-6 w-6 text-red-600" />
                 </div>
-                <Dialog.Title className="text-lg font-semibold text-gray-900 mb-2">
+                <Dialog.Title className="text-xl font-semibold text-gray-900 mb-2">
                   Kullanıcıyı Sil
                 </Dialog.Title>
                 <p className="text-sm text-gray-500">
@@ -524,14 +585,14 @@ function GetAllUsers() {
               <div className="mt-6 flex justify-center space-x-3">
                 <button
                   onClick={handleCloseDeleteConfirm}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-300"
                 >
                   <FaTimes className="h-4 w-4 mr-2" />
                   Vazgeç
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300"
                 >
                   <FaTrash className="h-4 w-4 mr-2" />
                   Sil
