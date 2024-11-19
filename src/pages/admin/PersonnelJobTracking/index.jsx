@@ -124,17 +124,50 @@ function PersonnelJobTrackingPage() {
       console.error("Tüm personel alınamadı.", error);
     }
   };
-
   const fetchDailyWorkRecords = useCallback(async () => {
     setIsLoading(true);
     try {
       const formattedDate = selectedDate.toISOString().split("T")[0];
       const response = await getDailyWorkRecords(formattedDate);
       if (response.success) {
+        const assignedPersonnel = response.data.assigned.map((record) => ({
+          id: record.personnel_id?._id,
+          name: record.personnel_id?.name,
+          jobStartTime: record.job_start_time,
+          jobEndTime: record.job_end_time,
+          overtimeHours: record.overtime_hours || {
+            start_time: "",
+            end_time: "",
+          },
+          company_id: record.company_id,
+          recordId: record._id,
+        }));
+
+        // Personel ID'lerini al
+        const assignedPersonnelIds = assignedPersonnel.map((p) => p.id);
+
+        // İzinli personelleri ve atanmamış personelleri ayır
+        const unassignedPersonnelData = allPersonnelWithLeave.filter(
+          (person) => {
+            const isAssigned = assignedPersonnelIds.includes(person.id);
+            const isOnLeave =
+              person.status === "İzinli" &&
+              person.leaveStartDate &&
+              person.leaveEndDate &&
+              new Date(person.leaveStartDate) <= new Date(selectedDate) &&
+              new Date(person.leaveEndDate) >= new Date(selectedDate);
+
+            return !isAssigned && !isOnLeave; // Atanmamış ve izinli olmayan personel
+          }
+        );
+
+        setUnassignedPersonnel(unassignedPersonnelData);
+
+        // Şirketlere personel ataması yap
         setCompanies((prevCompanies) =>
           prevCompanies.map((company) => ({
             ...company,
-            personnel: response.data.assigned.filter(
+            personnel: assignedPersonnel.filter(
               (person) => person.company_id === company.id
             ),
           }))
@@ -145,7 +178,7 @@ function PersonnelJobTrackingPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDate]);
+  }, [allPersonnelWithLeave, selectedDate]);
 
   const fetchAllLeaves = async () => {
     try {
