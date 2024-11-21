@@ -151,6 +151,7 @@ function PersonnelJobTrackingPage() {
           (person) => {
             const isAssigned = assignedPersonnelIds.includes(person.id);
             const isOnLeave =
+              person.status !== "Pasif" && // Pasif olmayan
               person.status === "İzinli" &&
               person.leaveStartDate &&
               person.leaveEndDate &&
@@ -511,8 +512,8 @@ function PersonnelJobTrackingPage() {
     const isNotOnLeave = !inactivePersonnel.some(
       (leavePerson) => leavePerson.id === person.id
     );
-
-    return groupMatch && searchMatch && isNotOnLeave;
+    const isNotPassive = person.status !== "Pasif";
+    return groupMatch && searchMatch && isNotOnLeave && isNotPassive;
   });
 
   if (isLoading) {

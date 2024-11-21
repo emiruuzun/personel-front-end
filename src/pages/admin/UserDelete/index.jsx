@@ -33,11 +33,13 @@ function GetAllUsers() {
   const [leaveDays, setLeaveDays] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("Tümü");
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
     onLeaveUsers: 0,
-    pendingVerification: 0,
+    inactiveUsers: 0,
   });
 
   const groups = [
@@ -74,8 +76,43 @@ function GetAllUsers() {
       totalUsers: userData.length,
       activeUsers: userData.filter((user) => user.status === "Aktif").length,
       onLeaveUsers: userData.filter((user) => user.status === "İzinli").length,
-      pendingVerification: userData.filter((user) => !user.isVerify).length,
+      inactiveUsers: userData.filter((user) => user.status === "Pasif").length,
     });
+  };
+
+  const handleStatusCardClick = (status) => {
+    setSelectedStatus(status);
+    setShowStatusModal(true);
+  };
+
+  const getStatusModalTitle = () => {
+    switch (selectedStatus) {
+      case "active":
+        return "Aktif Personel Listesi";
+      case "onLeave":
+        return "İzindeki Personel Listesi";
+      case "inactive":
+        return "Pasif Personel Listesi";
+      case "total":
+        return "Tüm Personel Listesi";
+      default:
+        return "";
+    }
+  };
+
+  const getFilteredUsersByStatus = () => {
+    switch (selectedStatus) {
+      case "active":
+        return users.filter((user) => user.status === "Aktif");
+      case "onLeave":
+        return users.filter((user) => user.status === "İzinli");
+      case "inactive":
+        return users.filter((user) => user.status === "Pasif");
+      case "total":
+        return users;
+      default:
+        return [];
+    }
   };
 
   const calculateLeaveDays = (start, end) => {
@@ -188,7 +225,10 @@ function GetAllUsers() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+            <div
+              onClick={() => handleStatusCardClick("total")}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div className="bg-blue-100 rounded-2xl p-4">
@@ -207,7 +247,10 @@ function GetAllUsers() {
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-1" />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+            <div
+              onClick={() => handleStatusCardClick("active")}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div className="bg-green-100 rounded-2xl p-4">
@@ -226,7 +269,10 @@ function GetAllUsers() {
               <div className="bg-gradient-to-r from-green-500 to-green-600 h-1" />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+            <div
+              onClick={() => handleStatusCardClick("onLeave")}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div className="bg-yellow-100 rounded-2xl p-4">
@@ -245,18 +291,21 @@ function GetAllUsers() {
               <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 h-1" />
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105">
+            <div
+              onClick={() => handleStatusCardClick("inactive")}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div className="bg-red-100 rounded-2xl p-4">
-                    <FaInfoCircle className="h-6 w-6 text-red-600" />
+                    <FaUserClock className="h-6 w-6 text-red-600" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">
-                      Onay Bekleyen
+                      Pasif Personel
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {stats.pendingVerification}
+                      {stats.inactiveUsers}
                     </p>
                   </div>
                 </div>
@@ -306,13 +355,35 @@ function GetAllUsers() {
               {filteredUsers.map((user) => (
                 <div
                   key={user._id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105"
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                    user.status === "İzinli"
+                      ? "border-l-4 border-yellow-400"
+                      : user.status === "Pasif"
+                      ? "border-l-4 border-red-400"
+                      : "border-l-4 border-green-400"
+                  }`}
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4">
-                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-3">
-                          <FaUser className="h-6 w-6 text-white" />
+                        <div
+                          className={`rounded-2xl p-3 ${
+                            user.status === "İzinli"
+                              ? "bg-yellow-100"
+                              : user.status === "Pasif"
+                              ? "bg-red-100"
+                              : "bg-green-100"
+                          }`}
+                        >
+                          <FaUser
+                            className={`h-6 w-6 ${
+                              user.status === "İzinli"
+                                ? "text-yellow-600"
+                                : user.status === "Pasif"
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                          />
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">
@@ -322,15 +393,20 @@ function GetAllUsers() {
                         </div>
                       </div>
                       <div>
-                        {user.isVerify ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        {user.status === "İzinli" ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                             <FaCheck className="w-4 h-4 mr-1" />
-                            Onaylı
+                            İzinli
                           </span>
-                        ) : (
+                        ) : user.status === "Pasif" ? (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                             <FaTimes className="w-4 h-4 mr-1" />
-                            Onaysız
+                            Pasif
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <FaCheck className="w-4 h-4 mr-1" />
+                            Aktif
                           </span>
                         )}
                       </div>
@@ -366,7 +442,72 @@ function GetAllUsers() {
           )}
         </div>
 
-        {/* İzin Modal */}
+        {/* Status Modal */}
+        {showStatusModal && (
+          <Dialog.Root
+            open={showStatusModal}
+            onOpenChange={() => setShowStatusModal(false)}
+          >
+            <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+            <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-4xl bg-white rounded-2xl shadow-2xl p-6">
+              <Dialog.Title className="text-xl font-semibold mb-4 text-gray-900">
+                {getStatusModalTitle()}
+              </Dialog.Title>
+
+              <div className="max-h-[60vh] overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {getFilteredUsersByStatus().map((user) => (
+                    <div
+                      key={user._id}
+                      className="bg-gray-50 rounded-xl p-4 space-y-3"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-blue-100 rounded-full p-2">
+                          <FaUser className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            {user.name}
+                          </h3>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Pozisyon:</span>{" "}
+                          {user.position}
+                        </p>
+                        <p>
+                          <span className="font-medium">Grup:</span>{" "}
+                          {user.group}
+                        </p>
+                        {user.status === "İzinli" && (
+                          <p>
+                            <span className="font-medium">İzin Bitiş:</span>{" "}
+                            {user.leaveEndDate}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 transition-all duration-300"
+                >
+                  <FaTimes className="h-4 w-4 mr-2" />
+                  Kapat
+                </button>
+              </div>
+            </Dialog.Content>
+          </Dialog.Root>
+        )}
+
+        {/* Leave Modal */}
         {showLeaveModal && leaveUser && (
           <Dialog.Root
             open={showLeaveModal}
