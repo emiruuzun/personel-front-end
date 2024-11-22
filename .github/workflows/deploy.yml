@@ -43,10 +43,26 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
             cd /personel-faberk  # Doğru klasöre geçiş
-            sudo docker compose down
-            sudo docker rm -f $(sudo docker ps -a -q --filter "name=nginx") || true
-            sudo docker rm -f $(sudo docker ps -a -q --filter "name=frontend") || true
-            sudo docker rm -f $(sudo docker ps -a -q --filter "name=backend") || true
-            sudo docker rm -f $(sudo docker ps -aq) || true
-            sudo docker rmi $(sudo docker images -q) || true
-            sudo docker compose up -d --build
+            # Docker Compose işlemleri
+            if [ -f docker-compose.yml ]; then
+                echo "docker-compose.yml bulundu, işlemler başlatılıyor..."
+                sudo docker compose down
+                # Containerları güvenle kaldır
+                for service in nginx frontend backend; do
+                  if [ "$(sudo docker ps -a -q --filter "name=$service")" ]; then
+                    sudo docker rm -f $(sudo docker ps -a -q --filter "name=$service") || true
+                  else
+                    echo "$service container bulunamadı, atlanıyor."
+                  fi
+                done
+                # Görüntüleri kaldır (isteğe bağlı)
+                if [ "$(sudo docker images -q)" ]; then
+                  sudo docker rmi $(sudo docker images -q) || true
+                fi
+                # Docker Compose çalıştır
+                sudo docker compose up -d --build
+                echo "Docker Compose işlemleri başarıyla tamamlandı!"
+            else
+                echo "docker-compose.yml bulunamadı, işlem iptal edildi."
+                exit 1
+            fi
