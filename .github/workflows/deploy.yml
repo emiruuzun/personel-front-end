@@ -61,7 +61,7 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
           # Proje dizinine git
-          cd /root/personel-faberk
+          cd /personel-faberk
           
           # Mevcut servisleri durdur
           sudo docker compose down
