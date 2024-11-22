@@ -68,6 +68,7 @@ function JobReport() {
         record.personnel_id?.totalWorkingWeekdays || 0;
       const totalWorkingWeekends =
         record.personnel_id?.totalWorkingWeekends || 0;
+      const isArchived = record.personnel_id?.isArchived || false;
 
       if (!summary[personnelId]) {
         summary[personnelId] = {
@@ -81,6 +82,7 @@ function JobReport() {
           totalWorkingDays, // Toplam çalışma günleri
           totalWorkingWeekdays, // Hafta içi çalışma günleri
           totalWorkingWeekends, // Hafta sonu çalışma günleri
+          isArchived,
         };
       }
 
@@ -208,28 +210,15 @@ function JobReport() {
                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                   className="p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  {[
-                    "Ocak",
-                    "Şubat",
-                    "Mart",
-                    "Nisan",
-                    "Mayıs",
-                    "Haziran",
-                    "Temmuz",
-                    "Ağustos",
-                    "Eylül",
-                    "Ekim",
-                    "Kasım",
-                    "Aralık",
-                  ].map((month, index) => (
+                  {[...Array(12)].map((_, i) => (
                     <option
-                      key={index}
-                      value={index}
+                      key={i}
+                      value={i}
                       disabled={
-                        selectedYear === currentYear && index > currentMonth
+                        selectedYear === currentYear && i > currentMonth
                       }
                     >
-                      {month}
+                      {new Date(0, i).toLocaleString("tr", { month: "long" })}
                     </option>
                   ))}
                 </select>
@@ -281,14 +270,30 @@ function JobReport() {
                   {filteredData.map((record, index) => (
                     <div
                       key={index}
-                      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                      className={`p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 ${
+                        record.isArchived ? "bg-yellow-100" : "bg-white"
+                      }`}
                     >
                       <div className="flex items-center mb-4">
-                        <FaUser className="text-blue-500 mr-3 text-xl" />
+                        <FaUser
+                          className={`mr-3 text-xl ${
+                            record.isArchived
+                              ? "text-yellow-700"
+                              : "text-blue-500"
+                          }`}
+                        />
                         <h3 className="text-lg font-semibold text-gray-800">
                           {record.name}
                         </h3>
                       </div>
+                      {record.isArchived && (
+                        <div className="flex items-center mb-2">
+                          <FaUser className="text-yellow-700 mr-2" />
+                          <span className="text-yellow-700 font-semibold">
+                            İşten çıkarılmış
+                          </span>
+                        </div>
+                      )}
                       <div className="space-y-3">
                         <div className="flex items-center">
                           <FaClock className="text-green-500 mr-2" />
