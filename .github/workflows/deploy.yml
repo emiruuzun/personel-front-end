@@ -61,7 +61,7 @@ jobs:
         port: ${{ secrets.SERVER_PORT }}
         script: |
           # Proje dizinine git
-          cd /personel-faberk
+          cd /root/personel-faberk
           
           # Mevcut servisleri durdur
           sudo docker compose down
@@ -77,14 +77,6 @@ jobs:
           
           # Docker compose ile servisleri yeniden başlat
           sudo docker compose up -d --build
-          
-          # Hata kontrolü
-          if [ $? -eq 0 ]; then
-            echo "Deployment successful!"
-          else
-            echo "Deployment failed!"
-            exit 1
-          fi
           
           # Sistem durumunu kontrol et
           sudo docker ps
