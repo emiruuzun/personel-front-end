@@ -18,21 +18,39 @@ jobs:
       with:
         node-version: 18
 
-    - name: Build frontend Docker image
-      run: |
-        docker build \
-          --build-arg REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }} \
-          -t emiruuzun/personel-faberk-frontend:latest .
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-    - name: Log in to Docker Hub
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Push frontend Docker image to Docker Hub
+    - name: Build and push frontend Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: emiruuzun/personel-faberk-frontend:latest
+        build-args: |
+          REACT_APP_API_BASE_URL=${{ secrets.REACT_APP_API_BASE_URL }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+    # Önbellek optimizasyonu
+    - name: Move cache
       run: |
-        docker push emiruuzun/personel-faberk-frontend:latest
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
     - name: SSH into server and deploy
       uses: appleboy/ssh-action@v0.1.7
@@ -42,27 +60,32 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-            cd /personel-faberk  # Doğru klasöre geçiş
-            # Docker Compose işlemleri
-            if [ -f docker-compose.yml ]; then
-                echo "docker-compose.yml bulundu, işlemler başlatılıyor..."
-                sudo docker compose down
-                # Containerları güvenle kaldır
-                for service in nginx frontend backend; do
-                  if [ "$(sudo docker ps -a -q --filter "name=$service")" ]; then
-                    sudo docker rm -f $(sudo docker ps -a -q --filter "name=$service") || true
-                  else
-                    echo "$service container bulunamadı, atlanıyor."
-                  fi
-                done
-                # Görüntüleri kaldır (isteğe bağlı)
-                if [ "$(sudo docker images -q)" ]; then
-                  sudo docker rmi $(sudo docker images -q) || true
-                fi
-                # Docker Compose çalıştır
-                sudo docker compose up -d --build
-                echo "Docker Compose işlemleri başarıyla tamamlandı!"
-            else
-                echo "docker-compose.yml bulunamadı, işlem iptal edildi."
-                exit 1
-            fi
+          # Proje dizinine git
+          cd /personel-faberk
+          
+          # Mevcut servisleri durdur
+          sudo docker compose down
+          
+          # Kullanılmayan container'ları temizle
+          sudo docker container prune -f
+          
+          # Kullanılmayan imajları temizle
+          sudo docker image prune -af
+          
+          # En son imajları çek
+          sudo docker pull emiruuzun/personel-faberk-frontend:latest
+          
+          # Docker compose ile servisleri yeniden başlat
+          sudo docker compose up -d --build
+          
+          # Hata kontrolü
+          if [ $? -eq 0 ]; then
+            echo "Deployment successful!"
+          else
+            echo "Deployment failed!"
+            exit 1
+          fi
+          
+          # Sistem durumunu kontrol et
+          sudo docker ps
+          sudo docker compose logs --tail=50
