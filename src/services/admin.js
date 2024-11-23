@@ -558,6 +558,7 @@ export const getRecentActivities = async () => {
     console.error("API isteği başarısız oldu:", error);
     toast.error("Aktiviteler alınamadı.");
     throw new Error("API request failed");
+    //
   }
 };
 
