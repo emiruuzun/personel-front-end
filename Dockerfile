@@ -12,5 +12,4 @@ WORKDIR /app
 COPY --from=build /app/build /app/build
 RUN npm install -g serve
 EXPOSE 4000
-ENV PORT=4000
-CMD ["serve", "-s", "build", "-l", "$PORT"]
+CMD ["serve", "-s", "build", "-l", "4000"]
