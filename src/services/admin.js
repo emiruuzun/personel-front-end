@@ -437,6 +437,7 @@ export const deleteCompany = async (id) => {
   } catch (error) {
     console.error("Error deleting company:", error);
     throw error;
+    //
   }
 };
 export const addJobToCompany = async (companyId, jobData) => {
