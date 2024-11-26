@@ -62,28 +62,30 @@ jobs:
         script: |
           # Ortak proje klasörüne geçiş
           cd /root/shared-projects
-          sudo docker compose down
-          sudo docker compose up -d --build
+
+          # Personel frontend servisini durdur
+          sudo docker compose stop personel-frontend
+
+          # Personel frontend container'ını kaldır
+          sudo docker compose rm -f personel-frontend
+
+          # Kullanılan personel frontend image'ini temizle
+          sudo docker rmi -f emiruuzun/personel-faberk-frontend:latest || true
+
+          # En son personel frontend image'ini indir
+          sudo docker pull emiruuzun/personel-faberk-frontend:latest
+
+          # Personel frontend servisini yeniden başlat
+          sudo docker compose up -d --build personel-frontend
+
+          # Sistem durumunu kontrol et
+          sudo docker ps
+          sudo docker compose logs --tail=50 personel-frontend
 
         # script: |
-        #   # Proje dizinine git
-        #   cd /shared-projects
-          
-        #   # Mevcut servisleri durdur
+        #   # Ortak proje klasörüne geçiş
+        #   cd /root/shared-projects
         #   sudo docker compose down
-          
-        #   # Kullanılmayan container'ları temizle
-        #   sudo docker container prune -f
-          
-        #   # Kullanılmayan imajları temizle
-        #   sudo docker image prune -af
-          
-        #   # En son imajları çek
-        #   sudo docker pull emiruuzun/personel-faberk-frontend:latest
-          
-        #   # Docker compose ile servisleri yeniden başlat
         #   sudo docker compose up -d --build
-          
-        #   # Sistem durumunu kontrol et
-        #   sudo docker ps
-        #   sudo docker compose logs --tail=50
+
+        
