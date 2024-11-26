@@ -35,18 +35,13 @@ import JobReport from "./pages/admin/JobReport";
 import { io } from "socket.io-client";
 
 const userRole = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const token = getCookie("access_token");
-      if (!token) {
-        console.warn("access_token bulunamadı");
-        resolve(null);
-        return;
-      }
-      const decodedToken = decodeToken(token);
-      resolve(decodedToken ? decodedToken.role : null);
-    }, 100); // 100ms gecikme
-  });
+  const token = getCookie("access_token");
+  if (!token) {
+    return null;
+  }
+
+  const decodedToken = decodeToken(token);
+  return decodedToken ? decodedToken.role : null;
 };
 
 function PrivateRoute({ children }) {
