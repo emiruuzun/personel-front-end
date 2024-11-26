@@ -4,7 +4,6 @@ export const setCookie = (name, value, expiryDays) => {
     date.setTime(date.getTime() + expiryDays * 24 * 60 * 60 * 1000);
     const expires = `expires=${date.toUTCString()}`;
     document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;domain=${window.location.hostname};SameSite=Lax;Secure`;
-    console.log(`Cookie ${name} başarıyla ayarlandı:`, document.cookie);
   } catch (error) {
     console.error(`Cookie ${name} ayarlanamadı: `, error);
   }
