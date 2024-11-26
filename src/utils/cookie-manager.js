@@ -1,63 +1,23 @@
-// export const setCookie = (name, value, expiryDays) => {
-//   const date = new Date();
-//   date.setTime(date.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
-//   const expires = "expires=" + date.toUTCString();
-//   document.cookie = name + "=" + value + ";" + expires + ";path=/";
-// };
-
-// export const getCookie = name => {
-//   const nameEQ = name + "=";
-//   const cookies = document.cookie.split(";").map(cookie => cookie.trim());
-
-//   for (const cookie of cookies) {
-//     if (cookie.indexOf(nameEQ) === 0) {
-//       return cookie.substring(nameEQ.length);
-//     }
-//   }
-//   return null;
-// };
-
-
-// export const deleteCookie = (name) => {
-//   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-// };
-
-
-
 export const setCookie = (name, value, expiryDays) => {
-  try {
-    const date = new Date();
-    date.setTime(date.getTime() + expiryDays * 24 * 60 * 60 * 1000);
-    const expires = `expires=${date.toUTCString()}`;
-    document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;domain=${window.location.hostname};SameSite=Lax;Secure`;
-    console.log(`Cookie ${name} başarıyla ayarlandı:`, document.cookie);
-  } catch (error) {
-    console.error(`Cookie ${name} ayarlanamadı: `, error);
-  }
+  const date = new Date();
+  date.setTime(date.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
+  const expires = "expires=" + date.toUTCString();
+  document.cookie = name + "=" + value + ";" + expires + ";path=/";
 };
 
-export const getCookie = (name) => {
-  try {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      let cookie = cookies[i].trim();
-      if (cookie.startsWith(name + '=')) {
-        return decodeURIComponent(cookie.substring(name.length + 1));
-      }
+export const getCookie = name => {
+  const nameEQ = name + "=";
+  const cookies = document.cookie.split(";").map(cookie => cookie.trim());
+
+  for (const cookie of cookies) {
+    if (cookie.indexOf(nameEQ) === 0) {
+      return cookie.substring(nameEQ.length);
     }
-    console.warn(`Cookie ${name} bulunamadı.`);
-    return null;
-  } catch (error) {
-    console.error(`Cookie ${name} okunamadı: `, error);
-    return null;
   }
+  return null;
 };
+
 
 export const deleteCookie = (name) => {
-  try {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-    console.log(`Cookie ${name} başarıyla silindi.`);
-  } catch (error) {
-    console.error(`Cookie ${name} silinemedi: `, error);
-  }
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 };
