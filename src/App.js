@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect,useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getCookie } from "./utils/cookie-manager";
 import { decodeToken } from "./utils/decoded-token";
@@ -30,93 +31,83 @@ import JobAssignmentsList from "./pages/admin/JobAssignmentsList";
 import AdminWorkUsageChart from "./pages/admin/WorkApexChart";
 import JobReport from "./pages/admin/JobReport";
 
-// Socket.IO
+// Sokcet İo
 import { io } from "socket.io-client";
 
-// Asenkron `userRole` Fonksiyonu
-const userRole = async () => {
-  const token = getCookie("access_token");
-  if (!token) {
-    console.warn("access_token bulunamadı");
-    return null;
-  }
-  const decodedToken = decodeToken(token);
-  return decodedToken ? decodedToken.role : null;
+// const userRole = () => {
+//   const token = getCookie("access_token");
+//   if (!token) {
+//     return null;
+//   }
+
+//   const decodedToken = decodeToken(token);
+//   return decodedToken ? decodedToken.role : null;
+// };
+const userRole = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const token = getCookie("access_token");
+      if (!token) {
+        console.warn("access_token bulunamadı");
+        resolve(null);
+        return;
+      }
+      const decodedToken = decodeToken(token);
+      resolve(decodedToken ? decodedToken.role : null);
+    }, 100); // 100ms gecikme
+  });
 };
 
-// Private Route
 function PrivateRoute({ children }) {
-  const [role, setRole] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
 
+  const [isAuthorized, setIsAuthorized] = useState(null);
+  const from = useLocation().state;
+  const role = userRole();
   useEffect(() => {
-    const fetchRole = async () => {
-      const role = await userRole();
-      setRole(role);
-      setIsLoading(false);
-    };
-    fetchRole();
+    userRole().then(role => {
+      setIsAuthorized(!!role);
+    });
   }, []);
 
-  if (isLoading) {
-    return <div>Yükleniyor...</div>; // Bir yükleniyor ekranı gösterebilirsiniz
+  if (isAuthorized === null) {
+    return <div>Loading...</div>;
   }
 
   if (!role) {
-    return <Navigate to="/giris" replace state={{ from: location }} />;
+    return <Navigate to="/giris" replace state={{ from }} />;
+  }
+
+  if (role === "admin") {
+    return <Navigate to="/admin" replace state={{ from }} />;
   }
 
   return children;
 }
 
-// Public Route
 function PublicRoute({ children }) {
-  const [role, setRole] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
-
+  const [isAuthorized, setIsAuthorized] = useState(null);
+  const from = useLocation().state;
   useEffect(() => {
-    const fetchRole = async () => {
-      const role = await userRole();
-      setRole(role);
-      setIsLoading(false);
-    };
-    fetchRole();
+    userRole().then(role => {
+      setIsAuthorized(!!role);
+    });
   }, []);
-
-  if (isLoading) {
-    return <div>Yükleniyor...</div>; // Bir yükleniyor ekranı gösterebilirsiniz
+  if (isAuthorized === null) {
+    return <div>Loading...</div>;
   }
-
-  if (role) {
-    return <Navigate to="/dashboard" replace state={{ from: location }} />;
+  if (userRole()) {
+    return <Navigate to="/dashboard" replace state={{ from }} />;
   }
 
   return children;
 }
 
-// Admin Route
 function AdminRoute({ children }) {
-  const [role, setRole] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const location = useLocation();
-
-  useEffect(() => {
-    const fetchRole = async () => {
-      const role = await userRole();
-      setRole(role);
-      setIsLoading(false);
-    };
-    fetchRole();
-  }, []);
-
-  if (isLoading) {
-    return <div>Yükleniyor...</div>;
-  }
+  const from = useLocation().state;
+  const role = userRole();
 
   if (role !== "admin") {
-    return <Navigate to="/giris" replace state={{ from: location }} />;
+    return <Navigate to="/giris" replace state={{ from }} />;
   }
 
   return children;
@@ -135,16 +126,16 @@ PublicRoute.propTypes = {
 };
 
 function App() {
-  const { setNotifications, setLeaveNotifications } = useNotifications();
+  const { setNotifications } = useNotifications();
+  const { setLeaveNotifications } = useNotifications();
   const { user } = useUser();
 
-  // Duyurular için socket.io bağlantısı
   useEffect(() => {
     const { REACT_APP_SOCKET_URL } = process.env;
     const socket = io(REACT_APP_SOCKET_URL);
-
     socket.on("announcement", (announcement) => {
       setNotifications((prev) => [...prev, announcement]);
+      // Bildirimleri başka bir komponentte göstermek için state'i güncelliyoruz.
     });
 
     return () => {
@@ -152,18 +143,30 @@ function App() {
     };
   }, [setNotifications]);
 
-  // Kullanıcı izin bildirimleri için socket.io
   useEffect(() => {
-    const userId = user?.id || JSON.parse(localStorage.getItem("user"))?.id;
+    let userId;
+
+    if (user) {
+      userId = user.id;
+    } else {
+      const storedUser = localStorage.getItem("user");
+      const parsedUser = storedUser && JSON.parse(storedUser);
+      userId = parsedUser ? parsedUser.id : null;
+    }
 
     if (userId) {
       const { REACT_APP_SOCKET_URL } = process.env;
       const socket = io(REACT_APP_SOCKET_URL, {
-        query: { userId },
+        query: { userId: userId },
       });
 
       socket.on("leaveStatusUpdated", (data) => {
+        console.log("appJs Data", data);
+
+        // Bildirimi backend'den gelen mesaj ile güncelleyin
         setLeaveNotifications((prev) => [...prev, data]);
+
+        // Gelen data.message'ı kullanarak bildirim mesajını göster
         toast.info(data.message);
       });
 
@@ -171,17 +174,18 @@ function App() {
         socket.off("leaveStatusUpdated");
       };
     }
-  }, [user, setLeaveNotifications]);
+  }, [user, setLeaveNotifications]); //
 
   return (
     <>
       <Routes>
-        {/* Public Routes */}
+        {/* Public Route */}
+
         <Route
           path="/"
           element={
             <PublicRoute>
-              <Anasayfa />
+              <Anasayfa></Anasayfa>
             </PublicRoute>
           }
         />
@@ -189,12 +193,12 @@ function App() {
           path="/giris"
           element={
             <PublicRoute>
-              <Giris />
+              <Giris></Giris>
             </PublicRoute>
           }
         />
 
-        {/* Private Routes */}
+        {/* Private Route */}
         <Route
           path="/dashboard"
           element={
@@ -207,7 +211,7 @@ function App() {
           path="/dashboard/profile"
           element={
             <PrivateRoute>
-              <ProfilePage />
+              <ProfilePage></ProfilePage>
             </PrivateRoute>
           }
         />
@@ -215,7 +219,7 @@ function App() {
           path="/dashboard/feed"
           element={
             <PrivateRoute>
-              <FeedPage />
+              <FeedPage></FeedPage>
             </PrivateRoute>
           }
         />
@@ -223,7 +227,7 @@ function App() {
           path="/dashboard/leave"
           element={
             <PrivateRoute>
-              <LeaveRequestForm />
+              <LeaveRequestForm></LeaveRequestForm>
             </PrivateRoute>
           }
         />
@@ -231,17 +235,17 @@ function App() {
           path="/dashboard/leave-get"
           element={
             <PrivateRoute>
-              <LeaveRequestsPage />
+              <LeaveRequestsPage></LeaveRequestsPage>
             </PrivateRoute>
           }
         />
 
-        {/* Admin Routes */}
+        {/* Admin Route */}
         <Route
           path="/admin"
           element={
             <AdminRoute>
-              <AdminAnasayfa />
+              <AdminAnasayfa></AdminAnasayfa>
             </AdminRoute>
           }
         />
@@ -249,7 +253,7 @@ function App() {
           path="/admin/profile"
           element={
             <AdminRoute>
-              <AdminProfilePage />
+              <AdminProfilePage></AdminProfilePage>
             </AdminRoute>
           }
         />
@@ -257,7 +261,7 @@ function App() {
           path="/admin/personel-register"
           element={
             <AdminRoute>
-              <PersonelRegister />
+              <PersonelRegister></PersonelRegister>
             </AdminRoute>
           }
         />
@@ -265,7 +269,7 @@ function App() {
           path="/admin/company-register"
           element={
             <AdminRoute>
-              <CompanyRegisterPage />
+              <CompanyRegisterPage></CompanyRegisterPage>
             </AdminRoute>
           }
         />
@@ -273,7 +277,7 @@ function App() {
           path="/admin/personel-job"
           element={
             <AdminRoute>
-              <PersonnelJobTrackingPage />
+              <PersonnelJobTrackingPage></PersonnelJobTrackingPage>
             </AdminRoute>
           }
         />
@@ -281,7 +285,7 @@ function App() {
           path="/admin/personnel-assignments"
           element={
             <AdminRoute>
-              <JobAssignmentsList />
+              <JobAssignmentsList></JobAssignmentsList>
             </AdminRoute>
           }
         />
@@ -289,7 +293,7 @@ function App() {
           path="/admin/getallusers"
           element={
             <AdminRoute>
-              <GetAllUsers />
+              <GetAllUsers></GetAllUsers>
             </AdminRoute>
           }
         />
@@ -297,7 +301,7 @@ function App() {
           path="/admin/Announcement"
           element={
             <AdminRoute>
-              <AnnouncementPage />
+              <AnnouncementPage></AnnouncementPage>
             </AdminRoute>
           }
         />
@@ -305,7 +309,7 @@ function App() {
           path="/admin/allLeave"
           element={
             <AdminRoute>
-              <AdminLeaveRequests />
+              <AdminLeaveRequests></AdminLeaveRequests>
             </AdminRoute>
           }
         />
@@ -313,7 +317,7 @@ function App() {
           path="/admin/job-reports"
           element={
             <AdminRoute>
-              <JobReport />
+              <JobReport></JobReport>
             </AdminRoute>
           }
         />
@@ -321,7 +325,7 @@ function App() {
           path="/admin/usage-chart"
           element={
             <AdminRoute>
-              <AdminLeaveUsageChart />
+              <AdminLeaveUsageChart></AdminLeaveUsageChart>
             </AdminRoute>
           }
         />
@@ -329,7 +333,7 @@ function App() {
           path="/admin/work-chart"
           element={
             <AdminRoute>
-              <AdminWorkUsageChart />
+              <AdminWorkUsageChart></AdminWorkUsageChart>
             </AdminRoute>
           }
         />
