@@ -60,24 +60,30 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-          # Proje dizinine git
-          cd /personel-faberk
-          
-          # Mevcut servisleri durdur
+          # Ortak proje klasörüne geçiş
+          cd /root/shared-projects
           sudo docker compose down
-          
-          # Kullanılmayan container'ları temizle
-          sudo docker container prune -f
-          
-          # Kullanılmayan imajları temizle
-          sudo docker image prune -af
-          
-          # En son imajları çek
-          sudo docker pull emiruuzun/personel-faberk-frontend:latest
-          
-          # Docker compose ile servisleri yeniden başlat
           sudo docker compose up -d --build
+
+        # script: |
+        #   # Proje dizinine git
+        #   cd /shared-projects
           
-          # Sistem durumunu kontrol et
-          sudo docker ps
-          sudo docker compose logs --tail=50
+        #   # Mevcut servisleri durdur
+        #   sudo docker compose down
+          
+        #   # Kullanılmayan container'ları temizle
+        #   sudo docker container prune -f
+          
+        #   # Kullanılmayan imajları temizle
+        #   sudo docker image prune -af
+          
+        #   # En son imajları çek
+        #   sudo docker pull emiruuzun/personel-faberk-frontend:latest
+          
+        #   # Docker compose ile servisleri yeniden başlat
+        #   sudo docker compose up -d --build
+          
+        #   # Sistem durumunu kontrol et
+        #   sudo docker ps
+        #   sudo docker compose logs --tail=50
