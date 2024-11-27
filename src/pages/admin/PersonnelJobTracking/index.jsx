@@ -70,7 +70,8 @@ function PersonnelJobTrackingPage() {
           (leave) =>
             leave.userId._id === person.id &&
             new Date(leave.startDate) <= selectedDate &&
-            new Date(leave.endDate) >= selectedDate
+            new Date(leave.endDate) >= selectedDate &&
+            leave.status !== "Reddedildi"
         );
 
         if (isOnLeave) {
@@ -79,7 +80,8 @@ function PersonnelJobTrackingPage() {
             (leave) =>
               leave.userId._id === person.id &&
               new Date(leave.startDate) <= selectedDate &&
-              new Date(leave.endDate) >= selectedDate
+              new Date(leave.endDate) >= selectedDate &&
+              leave.status !== "Reddedildi"
           );
           acc.onLeavePersonnel.push({
             ...person,

@@ -47,7 +47,11 @@ function JobAssignmentsList() {
           const leaveEnd = new Date(leave.endDate);
           const selected = new Date(selectedDate);
 
-          return selected >= leaveStart && selected <= leaveEnd;
+          return (
+            selected >= leaveStart &&
+            selected <= leaveEnd &&
+            leave.status !== "Reddedildi"
+          );
         });
         setLeaveRecords(filteredLeaves);
       }
