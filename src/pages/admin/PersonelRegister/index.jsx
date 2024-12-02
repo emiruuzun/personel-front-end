@@ -22,7 +22,8 @@ function PersonelRegister() {
     contact: "",
     status: "Aktif",
     group: "",
-    subgroup: "", // Alt grup için ekleme yapıldı
+    subgroup: "",
+    employmentType: "mavi yaka", // Varsayılan değer
   });
 
   const handleChange = (e) => {
@@ -48,7 +49,8 @@ function PersonelRegister() {
           contact: "",
           status: "Aktif",
           group: "",
-          subgroup: "", // Alt grup sıfırlanacak
+          subgroup: "",
+          employmentType: "mavi yaka", // Varsayılan değer
         });
       }
     } catch (error) {
@@ -193,6 +195,23 @@ function PersonelRegister() {
                   </select>
                 </div>
               )}
+
+              {/* Employment Type */}
+              <div className="relative">
+                <label className="text-gray-700 font-bold mb-2 flex items-center">
+                  <FaUsers className="mr-2" /> Çalışma Türü
+                </label>
+                <select
+                  name="employmentType"
+                  value={formData.employmentType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                >
+                  <option value="mavi yaka">Mavi Yaka</option>
+                  <option value="beyaz yaka">Beyaz Yaka</option>
+                </select>
+              </div>
 
               <div className="relative">
                 <label className="text-gray-700 font-bold mb-2 flex items-center">
