@@ -182,8 +182,10 @@ const LeaveRequestForm = () => {
               >
                 <option value="">Seçin</option>
                 <option value="Yıllık İzin">Yıllık İzin</option>
-                <option value="Hastalık İzni">Hastalık İzni</option>
                 <option value="Mazeret İzni">Mazeret İzni</option>
+                <option value="Ücretsiz İzin">Ücretsiz İzin</option>
+                <option value="Raporlu">Raporlu</option>
+                <option value="Ücretli İzin">Ücretli İzin</option>
               </select>
             </div>
 

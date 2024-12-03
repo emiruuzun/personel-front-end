@@ -529,8 +529,10 @@ function GetAllUsers() {
                     className="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="Yıllık İzin">Yıllık İzin</option>
-                    <option value="Hastalık İzni">Hastalık İzni</option>
                     <option value="Mazeret İzni">Mazeret İzni</option>
+                    <option value="Ücretsiz İzin">Ücretsiz İzin</option>
+                    <option value="Raporlu">Raporlu</option>
+                    <option value="Ücretli İzin">Ücretli İzin</option>
                   </select>
                 </div>
 
